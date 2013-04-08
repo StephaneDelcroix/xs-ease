@@ -2,9 +2,9 @@
 // PublishHandler.cs
 //
 // Author:
-//       Stephane Delcroix <stephane@delcroix.org>
+//       Stephane Delcroix <stephane@mi8.be>
 //
-// Copyright (c) 2013 S. Delcroix
+// Copyright (c) 2013 Apperian, Inc.
 //
 using System;
 using MonoDevelop.Components.Commands;
@@ -15,7 +15,13 @@ namespace Apperian.Ease.Publisher
 	{
 		protected override void Run ()
 		{
+#if DEBUG
 			Console.WriteLine ("Run");
+#endif
+			var dialog = new PublisherDialog ();
+			dialog.ShowAll ();
+			dialog.Run ();
+			dialog.Hide ();
 		}
 
 		protected override void Update (CommandInfo info)

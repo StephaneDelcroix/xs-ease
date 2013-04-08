@@ -2,11 +2,12 @@
        id			= "Publisher"
        name			= "Apperian Ease Publisher"
        author		= "Stephane Delcroix"
-       copyright	= "(c) 2013 Apperian, Inc."
+       copyright	= "Copyright (c) 2013 Apperian, Inc."
        url			= "http://www.apperian.com/ease/"
        description	= "Provides upload of builds to Apperian EASE"
        category		= "Mobile Development"
-       version		= "0.0.8">
+       icon			= "ease.png"
+       version		= "0.0.1">
     <Dependencies>
 		<Addin id="::MonoDevelop.Ide" version="4.0"/>
     </Dependencies>

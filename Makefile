@@ -10,3 +10,6 @@ build:
 
 pack: build
 	mautil p Apperian.Ease.Publisher/bin/$(CONFIGURATION)/Apperian.Ease.Publisher.dll
+
+clean:
+	rm -f *.mpack

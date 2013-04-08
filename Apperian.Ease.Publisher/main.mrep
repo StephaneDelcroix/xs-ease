@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Repository xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Addin>
+    <Url>Apperian.Ease.Publisher_0.0.7.mpack</Url>
+    <Addin>
+      <Id>Publisher</Id>
+      <Namespace>Apperian.Ease</Namespace>
+      <Name>Apperian Ease Publisher</Name>
+      <Version>0.0.7</Version>
+      <BaseVersion />
+      <Author>Stephane Delcroix</Author>
+      <Copyright>(c) 2013 Apperian, Inc.</Copyright>
+      <Url>http://www.apperian.com/ease/</Url>
+      <Description>Provides upload of builds to Apperian EASE</Description>
+      <Category>Mobile Development</Category>
+      <Dependencies>
+        <AddinDependency>
+          <AddinId>::MonoDevelop.Ide</AddinId>
+          <Version>4.0</Version>
+        </AddinDependency>
+      </Dependencies>
+      <OptionalDependencies />
+      <Properties>
+        <Property name="DownloadSize">2050</Property>
+      </Properties>
+    </Addin>
+  </Addin>
+  <Addin>
+    <Url>Apperian.Ease.Publisher_0.0.8.mpack</Url>
+    <Addin>
+      <Id>Publisher</Id>
+      <Namespace>Apperian.Ease</Namespace>
+      <Name>Apperian Ease Publisher</Name>
+      <Version>0.0.8</Version>
+      <BaseVersion />
+      <Author>Stephane Delcroix</Author>
+      <Copyright>(c) 2013 Apperian, Inc.</Copyright>
+      <Url>http://www.apperian.com/ease/</Url>
+      <Description>Provides upload of builds to Apperian EASE</Description>
+      <Category>Mobile Development</Category>
+      <Dependencies>
+        <AddinDependency>
+          <AddinId>::MonoDevelop.Ide</AddinId>
+          <Version>4.0</Version>
+        </AddinDependency>
+      </Dependencies>
+      <OptionalDependencies />
+      <Properties>
+        <Property name="DownloadSize">2055</Property>
+      </Properties>
+    </Addin>
+  </Addin>
+</Repository>

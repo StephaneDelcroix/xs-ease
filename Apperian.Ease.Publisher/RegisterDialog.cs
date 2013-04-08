@@ -1,5 +1,5 @@
 //
-// PublisherCommands.cs
+// RegisterDialog.cs
 //
 // Author:
 //       Stephane Delcroix <stephane@mi8.be>
@@ -8,11 +8,16 @@
 //
 using System;
 
+using Gtk;
+
 namespace Apperian.Ease.Publisher
 {
-	public enum PublisherCommands
+	public partial class RegisterDialog : Dialog
 	{
-		Publish,
+		public RegisterDialog ()
+		{
+			this.Build ();
+		}
 	}
 }
 
