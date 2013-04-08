@@ -1,0 +1,21 @@
+<Addin namespace 	= "Apperian.Ease"
+       id			= "Publisher"
+       name			= "Apperian Ease Publisher"
+       author		= "Stephane Delcroix"
+       copyright	= "(c) 2013 Apperian, Inc."
+       url			= "http://www.apperian.com/ease/"
+       description	= "Provides upload of builds to Apperian EASE"
+       category		= "Mobile Development"
+       version		= "0.0.8">
+    <Dependencies>
+		<Addin id="::MonoDevelop.Ide" version="4.0"/>
+    </Dependencies>
+    <Extension path = "/MonoDevelop/Ide/Commands/Edit">
+		<Command id = "Apperian.Ease.Publisher.Publish"
+			_label = "Publish to Apperian..."
+		 	defaultHandler = "Apperian.Ease.Publisher.PublishHandler"/>
+    </Extension>
+    <Extension path = "/MonoDevelop/Ide/MainMenu/Project">
+		<CommandItem id = "Apperian.Ease.Publisher.Publish" />
+    </Extension>
+</Addin>
