@@ -51,6 +51,25 @@
     <Reference Include="glib-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Net" />
+    <Reference Include="MonoDevelop.Core">
+      <HintPath>..\..\..\..\..\Applications\Xamarin Studio.app\Contents\MacOS\lib\monodevelop\bin\MonoDevelop.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System" />
+    <Reference Include="System.Json">
+      <HintPath>..\..\..\..\..\Library\Frameworks\Mono.framework\Versions\Current\lib\mono\4.0\System.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="MonoDevelop.IPhone">
+      <HintPath>..\..\..\..\..\Applications\Xamarin Studio.app\Contents\MacOS\lib\monodevelop\AddIns\MonoDevelop.IPhone\MonoDevelop.IPhone.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoDevelop.MacDev">
+      <HintPath>..\..\..\..\..\Applications\Xamarin Studio.app\Contents\MacOS\lib\monodevelop\AddIns\MonoDevelop.MacDev\MonoDevelop.MacDev.dll</HintPath>
+    </Reference>
+    <Reference Include="Xamarin.Ide">
+      <HintPath>..\..\..\..\..\Applications\Xamarin Studio.app\Contents\MacOS\lib\monodevelop\AddIns\Xamarin.Ide\Xamarin.Ide.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PublishHandler.cs" />
@@ -60,5 +79,14 @@
     <Compile Include="gtk-gui\Apperian.Ease.Publisher.PublisherDialog.cs" />
     <Compile Include="RegisterDialog.cs" />
     <Compile Include="gtk-gui\Apperian.Ease.Publisher.RegisterDialog.cs" />
+    <Compile Include="EasePublisher.cs" />
+    <Compile Include="Requests\JsonRequest.cs" />
+    <Compile Include="Requests\AuthenticateRequest.cs" />
+    <Compile Include="Requests\GetListRequest.cs" />
+    <Compile Include="Model\EaseApplication.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Requests\" />
+    <Folder Include="Model\" />
   </ItemGroup>
 </Project>

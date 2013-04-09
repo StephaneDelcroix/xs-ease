@@ -9,13 +9,13 @@ namespace Apperian.Ease.Publisher
 		private global::Gtk.ScrolledWindow GtkScrolledWindow;
 		private global::Gtk.TextView textview1;
 		private global::Gtk.HBox hbox1;
-		private global::Gtk.ComboBox combobox1;
+		private global::Gtk.ComboBox comboboxTargets;
 		private global::Gtk.Button buttonRegister;
 		private global::Gtk.Label label1;
 		private global::Gtk.Label label2;
 		private global::Gtk.Label label3;
 		private global::Gtk.Button buttonCancel;
-		private global::Gtk.Button buttonOk;
+		private global::Gtk.Button buttonPublish;
 		
 		protected virtual void Build ()
 		{
@@ -77,10 +77,10 @@ namespace Apperian.Ease.Publisher
 			this.hbox1.Name = "hbox1";
 			this.hbox1.Spacing = 6;
 			// Container child hbox1.Gtk.Box+BoxChild
-			this.combobox1 = global::Gtk.ComboBox.NewText ();
-			this.combobox1.Name = "combobox1";
-			this.hbox1.Add (this.combobox1);
-			global::Gtk.Box.BoxChild w5 = ((global::Gtk.Box.BoxChild)(this.hbox1 [this.combobox1]));
+			this.comboboxTargets = global::Gtk.ComboBox.NewText ();
+			this.comboboxTargets.Name = "comboboxTargets";
+			this.hbox1.Add (this.comboboxTargets);
+			global::Gtk.Box.BoxChild w5 = ((global::Gtk.Box.BoxChild)(this.hbox1 [this.comboboxTargets]));
 			w5.Position = 0;
 			// Container child hbox1.Gtk.Box+BoxChild
 			this.buttonRegister = new global::Gtk.Button ();
@@ -156,15 +156,13 @@ namespace Apperian.Ease.Publisher
 			w13.Expand = false;
 			w13.Fill = false;
 			// Container child dialog1_ActionArea.Gtk.ButtonBox+ButtonBoxChild
-			this.buttonOk = new global::Gtk.Button ();
-			this.buttonOk.CanDefault = true;
-			this.buttonOk.CanFocus = true;
-			this.buttonOk.Name = "buttonOk";
-			this.buttonOk.UseStock = true;
-			this.buttonOk.UseUnderline = true;
-			this.buttonOk.Label = "gtk-ok";
-			this.AddActionWidget (this.buttonOk, -5);
-			global::Gtk.ButtonBox.ButtonBoxChild w14 = ((global::Gtk.ButtonBox.ButtonBoxChild)(w12 [this.buttonOk]));
+			this.buttonPublish = new global::Gtk.Button ();
+			this.buttonPublish.CanDefault = true;
+			this.buttonPublish.CanFocus = true;
+			this.buttonPublish.Name = "buttonPublish";
+			this.buttonPublish.Label = global::Mono.Unix.Catalog.GetString ("Publish");
+			this.AddActionWidget (this.buttonPublish, -5);
+			global::Gtk.ButtonBox.ButtonBoxChild w14 = ((global::Gtk.ButtonBox.ButtonBoxChild)(w12 [this.buttonPublish]));
 			w14.Position = 1;
 			w14.Expand = false;
 			w14.Fill = false;
