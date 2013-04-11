@@ -18,6 +18,7 @@ namespace SampleIPhone
 	{
 		public SampleIPhoneViewController () : base ("SampleIPhoneViewController", null)
 		{
+
 		}
 		
 		public override void DidReceiveMemoryWarning ()

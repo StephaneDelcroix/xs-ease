@@ -1,0 +1,3 @@
+- replace System.Json by Json.NET (found in Monodevelop.IPhone)
+- store targets accross session
+- 

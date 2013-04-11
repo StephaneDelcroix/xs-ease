@@ -33,10 +33,10 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <EmbeddedResource Include="Apperian.Ease.addin.xml" />
-    <EmbeddedResource Include="ease.png" />
     <EmbeddedResource Include="gtk-gui\gui.stetic">
       <LogicalName>gui.stetic</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="ease.png" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoDevelop.Ide">
@@ -82,8 +82,13 @@
     <Compile Include="EasePublisher.cs" />
     <Compile Include="Requests\JsonRequest.cs" />
     <Compile Include="Requests\AuthenticateRequest.cs" />
-    <Compile Include="Requests\GetListRequest.cs" />
     <Compile Include="Model\EaseApplication.cs" />
+    <Compile Include="Requests\GetListRequest.cs" />
+    <Compile Include="Model\Transaction.cs" />
+    <Compile Include="Requests\CreateRequest.cs" />
+    <Compile Include="Requests\UpdateRequest.cs" />
+    <Compile Include="Requests\UploadRequest.cs" />
+    <Compile Include="Model\EaseMetadata.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Requests\" />

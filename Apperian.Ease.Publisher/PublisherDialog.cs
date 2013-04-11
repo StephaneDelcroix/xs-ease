@@ -38,6 +38,7 @@ namespace Apperian.Ease.Publisher
 		void LoadTargets ()
 		{
 			targets = new List<Tuple<string,string,string,string>> ();
+			//TODO load saved targets
 		}
 
 		void FillCombo ()
@@ -47,10 +48,16 @@ namespace Apperian.Ease.Publisher
 			comboboxTargets.PackStart (cell, false);
 			comboboxTargets.AddAttribute (cell, "text", 0);
 			var store = new ListStore(typeof (string));
-			comboboxTargets.Model = store;
 
-			foreach (var item in targets)
+			foreach (var item in targets) {
+				Console.WriteLine (item);
+				Console.WriteLine (item.Item1);
 				store.AppendValues (item.Item1);
+			}
+
+			comboboxTargets.Model = store;
+			if (targets.Count > 0)
+				comboboxTargets.Active = 0;
 		}
 
 		void OnRegisterClicked (object sender, EventArgs e)
@@ -63,7 +70,7 @@ namespace Apperian.Ease.Publisher
 			registerdialog.Hide ();
 
 			if (returnvalue == ResponseType.Ok) {
-				targets.Add (new Tuple<string, string, string, string> (registerdialog.Name, registerdialog.Url, registerdialog.Email,registerdialog.Password));
+				targets.Add (new Tuple<string, string, string, string> (registerdialog.TargetName, registerdialog.Url, registerdialog.Email,registerdialog.Password));
 				FillCombo ();
 			}
 		}

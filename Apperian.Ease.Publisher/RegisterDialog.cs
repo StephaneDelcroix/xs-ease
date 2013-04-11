@@ -20,7 +20,7 @@ namespace Apperian.Ease.Publisher
 		}
 
 		public string Url { get { return entryURL.Text; }}
-		public string Username { get { return entryName.Text; }}
+		public string TargetName { get { return entryName.Text; }}
 		public string Email { get { return entryEmail.Text; }}
 		public string Password { get { return entryPassword.Text; }} 
 	}
