@@ -199,7 +199,8 @@ namespace Apperian.Ease.Publisher
 				var applicationToUpdate = listedApps.Where(a => a.Name == ApplicationName && a.ApplicationType == projType).FirstOrDefault ();
 				if (applicationToUpdate != null) {
 					appId = applicationToUpdate.Id;
-					Metadata = applicationToUpdate.Metadata;
+					if (stopAfter == State.AppsListed)
+						Metadata = applicationToUpdate.Metadata;
 				}
 				SetState (State.AppsListed);
 			};

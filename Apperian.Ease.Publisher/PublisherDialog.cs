@@ -51,9 +51,15 @@ namespace Apperian.Ease.Publisher
 
 		void LoadTargets ()
 		{
-			targets = EasePublisher.Project.UserProperties.GetValue<List<Tuple<string,string,string,string>>> (settingsKey);
-			if (targets == null)
-				targets = new List<Tuple<string,string,string,string>> ();
+			targets = new List<Tuple<string,string,string,string>> ();
+			var prefs = EasePublisher.Project.UserProperties.GetValue<string> (settingsKey);
+			if (prefs == null)
+				return;
+			var splitted = prefs.Split (new [] {'|'});
+			if (splitted.Length % 4 == 0) {
+				for (var i=0;i<splitted.Length/4;i+=4)
+					targets.Add (new Tuple<string, string, string, string> (splitted[i], splitted[i+1], splitted[i+2], splitted[i+3]));
+			}
 		}
 
 		void FillCombo ()
@@ -100,7 +106,12 @@ namespace Apperian.Ease.Publisher
 
 		void OnAuthenticated (string targetname)
 		{
-			EasePublisher.Project.UserProperties.SetValue<List<Tuple<string,string,string,string>>> (settingsKey, targets);
+			var prefs = "";
+			foreach (var t in targets)
+				prefs += String.Format ("{0}|{1}|{2}|{3}|", t.Item1, t.Item2, t.Item3, t.Item4);
+			if (prefs.Length > 0)
+				prefs = prefs.Substring (0, prefs.Length-1);
+			EasePublisher.Project.UserProperties.SetValue<string> (settingsKey, prefs);
 		}
 
 		void OnSuccess ()
