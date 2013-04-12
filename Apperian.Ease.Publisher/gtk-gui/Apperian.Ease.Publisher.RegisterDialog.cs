@@ -22,7 +22,7 @@ namespace Apperian.Ease.Publisher
 			// Widget Apperian.Ease.Publisher.RegisterDialog
 			this.Name = "Apperian.Ease.Publisher.RegisterDialog";
 			this.Title = global::Mono.Unix.Catalog.GetString ("Register Publish Target");
-			this.Icon = global::Gdk.Pixbuf.LoadFromResource ("Apperian.Ease.Publisher.ease.png");
+			this.Icon = global::Gdk.Pixbuf.LoadFromResource ("Apperian.Ease.Publisher.icons.ease.png");
 			this.TypeHint = ((global::Gdk.WindowTypeHint)(1));
 			this.WindowPosition = ((global::Gtk.WindowPosition)(4));
 			this.Modal = true;

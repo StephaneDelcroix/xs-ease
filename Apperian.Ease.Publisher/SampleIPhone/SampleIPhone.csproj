@@ -104,4 +104,7 @@
     <InterfaceDefinition Include="SampleIPhoneViewController.xib" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <BundleResource Include="Resources\Icon.png" />
+  </ItemGroup>
 </Project>

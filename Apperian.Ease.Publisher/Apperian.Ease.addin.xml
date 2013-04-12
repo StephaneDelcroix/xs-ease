@@ -6,13 +6,13 @@
        url			= "http://www.apperian.com/ease/"
        description	= "Provides upload of builds to Apperian EASE"
        category		= "Mobile Development"
-       icon			= "ease.png"
+       icon32		= "icons/ease.png"
        version		= "0.0.4">
-<!--
-    <Header>
-    	<Icon32>ease.png</Icon32>   
-    </Header>
--->
+
+	<Runtime>
+		<Import file="icons/ease.png" />
+	</Runtime>
+	
     <Dependencies>
 		<Addin id="::MonoDevelop.Ide" version="4.0"/>
 		<Addin id="::MonoDevelop.Core" version="4.0"/>

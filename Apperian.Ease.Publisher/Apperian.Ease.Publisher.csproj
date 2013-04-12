@@ -36,7 +36,9 @@
     <EmbeddedResource Include="gtk-gui\gui.stetic">
       <LogicalName>gui.stetic</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="ease.png" />
+    <EmbeddedResource Include="icons\ease.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoDevelop.Ide">
@@ -89,9 +91,11 @@
     <Compile Include="Requests\UpdateRequest.cs" />
     <Compile Include="Requests\UploadRequest.cs" />
     <Compile Include="Model\EaseMetadata.cs" />
+    <Compile Include="Requests\PublishRequest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Requests\" />
     <Folder Include="Model\" />
+    <Folder Include="icons\" />
   </ItemGroup>
 </Project>

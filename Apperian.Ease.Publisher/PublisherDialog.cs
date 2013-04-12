@@ -25,15 +25,27 @@ namespace Apperian.Ease.Publisher
 			LoadTargets ();
 			FillCombo ();
 
+			nameEntry.Sensitive = authorEntry.Sensitive = versionEntry.Sensitive = descriptionEntry.Sensitive = versionNotesEntry.Sensitive = false;
+
 			buttonRegister.Clicked += OnRegisterClicked;
 			comboboxTargets.Changed += OnTargetChanged;
-			buttonPublish.Sensitive = targets.Count > 0 && comboboxTargets.Active >=0;
+			buttonPublish.Sensitive = false;
 		}
 
 		public string TargetName { get { return targets[comboboxTargets.Active].Item1; }}
 		public string TargetUrl { get { return targets[comboboxTargets.Active].Item2; }}
 		public string TargetEmail { get { return targets[comboboxTargets.Active].Item3; }}
 		public string TargetPassword { get { return targets[comboboxTargets.Active].Item4; }}
+		public EaseMetadata Metadata { get { return new Apperian.Ease.Publisher.EaseMetadata {
+					Author = authorEntry.Text,
+					LongDescription = descriptionEntry.Text,
+					Name = nameEntry.Text,
+					ShortDescription = descriptionEntry.Text,
+					Version = versionEntry.Text,
+					VersionNotes = versionNotesEntry.Buffer.Text,
+				};
+			}
+		}
 
 		void LoadTargets ()
 		{
@@ -56,8 +68,8 @@ namespace Apperian.Ease.Publisher
 			}
 
 			comboboxTargets.Model = store;
-			if (targets.Count > 0)
-				comboboxTargets.Active = 0;
+			//if (targets.Count > 0)
+			//	comboboxTargets.Active = 0;
 		}
 
 		void OnRegisterClicked (object sender, EventArgs e)
@@ -72,12 +84,33 @@ namespace Apperian.Ease.Publisher
 			if (returnvalue == ResponseType.Ok) {
 				targets.Add (new Tuple<string, string, string, string> (registerdialog.TargetName, registerdialog.Url, registerdialog.Email,registerdialog.Password));
 				FillCombo ();
+				comboboxTargets.Active = targets.Count - 1;
 			}
 		}
 
+		EasePublisher publisher;
 		void OnTargetChanged (object sender, EventArgs e)
 		{
-			buttonPublish.Sensitive = targets.Count > 0 && comboboxTargets.Active >=0;
+			buttonPublish.Sensitive = false;
+			nameEntry.Sensitive = authorEntry.Sensitive = versionEntry.Sensitive = descriptionEntry.Sensitive = versionNotesEntry.Sensitive = false;
+			publisher = new EasePublisher (TargetUrl, TargetName, TargetEmail, TargetPassword, null);
+			publisher.GetList (OnAuthenticated, OnSuccess, null);
+		}
+
+		void OnAuthenticated (string strgetname)
+		{
+			//TODO save settings
+		}
+
+		void OnSuccess ()
+		{
+			buttonPublish.Sensitive = true;
+			nameEntry.Sensitive = authorEntry.Sensitive = versionEntry.Sensitive = descriptionEntry.Sensitive = versionNotesEntry.Sensitive = true;
+			nameEntry.Text = publisher.ApplicationName;
+			authorEntry.Text = publisher.Project.AuthorInformation.Name;
+			versionEntry.Text = publisher.Project.Version;
+
+			Console.WriteLine ("SUCCESS, fill Description");
 		}
 	}
 }

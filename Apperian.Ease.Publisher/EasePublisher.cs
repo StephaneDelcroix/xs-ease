@@ -23,7 +23,8 @@ namespace Apperian.Ease.Publisher
 	public class EasePublisher
 	{
 		enum State {
-			Idle,
+			Error = -1,
+			Idle = 0,
 			Authenticated,
 			AppsListed,
 			Updated,
@@ -31,46 +32,83 @@ namespace Apperian.Ease.Publisher
 			Uploaded,
 			Published,
 			Done,
-			Error = 100
 		}
 
-		State state;
+		State state = State.Idle;
+		State stopAfter = State.Done;
+
 		string token, appId, transactionId, fileUploadUrl, fileId;
 
-		Project project;
-		ProjectConfiguration configuration;
-		string url, targetName, email, password, appName;
+		public Project Project { get; private set; }
+		public ProjectConfiguration Configuration { get; private set;}
+		string url, targetName, email, password;
+		EaseMetadata metadata;
+
+		public string ApplicationName {
+			get {
+				var iphoneconfig = Configuration as IPhoneProjectConfiguration;
+				if (iphoneconfig != null && !string.IsNullOrEmpty(iphoneconfig.IpaPackageName))
+					return iphoneconfig.IpaPackageName;
+				return Project.Name;
+			}
+		}
 		IList<EaseApplication> listedApplications;
-		Stream application;
 		Exception error;
-		Action<string> onAuthenticated, onSuccess;
+		Action<string> onAuthenticated;
+		Action onSuccess;
 		Action onError;
 
 		AggregatedProgressMonitor monitor;
-		public EasePublisher (Project project, ProjectConfiguration configuration,
-		                      string url, string targetName, string email, string password, 
-		                      string appName, Stream application, Action<string> onAuthenticated, Action<string> onSuccess, Action onError)
+		public EasePublisher (string url, string targetName, string email, string password, EaseMetadata metadata)
 		{
-			this.project = project;
-			this.configuration = configuration;
+			this.Project = PublishHandler.GetActiveExecutableIPhoneProject ();
+			this.Configuration = (IPhoneProjectConfiguration) Project.GetConfiguration (IdeApp.Workspace.ActiveConfiguration);
+
 			this.url = url;
 			this.targetName = targetName;
 			this.email = email;
 			this.password = password;
-			this.appName = appName;
-			this.application = application;
-			this.onAuthenticated = onAuthenticated;
-			this.onSuccess = onSuccess;
-			this.onError = onError;
+			this.metadata = metadata;
 		}
 
-		public void Start ()
+		public void Start (Action<string> authenticated, Action success, Action error)
+		{	
+			this.onAuthenticated = authenticated;
+			this.onSuccess = success;
+			this.onError = error;
+			try {
+				monitor = new AggregatedProgressMonitor ();
+				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetOutputProgressMonitor (
+					"Publishing to Apperian Ease",
+					MonoDevelop.Ide.Gui.Stock.RunProgramIcon, false, true));
+				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetStatusProgressMonitor (
+					"Publishing to Apperian Ease",
+					MonoDevelop.Ide.Gui.Stock.RunProgramIcon, true, true, false));
+
+				SetState (State.Idle);
+			} catch (Exception ex) {
+				// If we leak any exceptions out of this method, the process will die, so be a bit paranoid about it.
+				try {
+					monitor.ReportError ("Unhandled error while publishing", null);
+					LoggingService.LogError ("Unhandled exception while publishing", ex);
+				} catch {
+				}
+			} finally {
+				monitor.Dispose ();
+			}
+		}
+
+		public void GetList (Action<string> authenticated, Action success, Action error)
 		{
-			SetState (State.Idle);
+			stopAfter = State.AppsListed;
+			Start (authenticated, success, error);
 		}
 
 		void SetState (State newstate)
 		{
+			if ((int)newstate >= (int)stopAfter)
+				newstate = State.Done;
+
 			switch (newstate) {
 			case State.Idle:
 				Authenticate ();
@@ -79,7 +117,7 @@ namespace Apperian.Ease.Publisher
 				GetApplicationList ();
 				break;
 			case State.AppsListed:
-				var app = listedApplications.Where (ea => ea.Name == appName).FirstOrDefault ();
+				var app = listedApplications.Where (ea => ea.Name == ApplicationName).FirstOrDefault ();
 				if (app == null)
 					Create ();
 				else
@@ -94,7 +132,7 @@ namespace Apperian.Ease.Publisher
 				break;
 			case State.Done:
 				if (onSuccess != null)
-					onSuccess (appName);
+					onSuccess ();
 				break;
 			case State.Error:
 				ReportError ();
@@ -104,285 +142,199 @@ namespace Apperian.Ease.Publisher
 
 		void Authenticate ()
 		{
+			monitor.Log.Write ("Authenticating...");
 #if DEBUG
 			Console.WriteLine ("Authenticate.");
 #endif
-			try {
-				monitor = new AggregatedProgressMonitor ();
-				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetOutputProgressMonitor (
-					"Register to Apperian Ease",
-					MonoDevelop.Ide.Gui.Stock.RunProgramIcon, false, true));
-				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetStatusProgressMonitor (
-					"Register to Apperian Ease",
-					MonoDevelop.Ide.Gui.Stock.RunProgramIcon, true, true, false));
-				
-				if (string.IsNullOrEmpty (url)) {
-					monitor.ReportError ("A Publish URL is required to register a Publish Target", null);
-					return;
-				}
-				
-				if (string.IsNullOrEmpty (targetName)) {
-					monitor.ReportError ("A Target Name is required to register a Publish Target", null);
-					return;
-				}
-				
-				if (string.IsNullOrEmpty (email)) {
-					monitor.ReportError ("An Email is required to register a Publish Target", null);
-					return;
-				}
-				
-				if (string.IsNullOrEmpty (password)) {
-					monitor.ReportError ("A Password is required to register a Publish Target", null);
-					return;
-				}
-
-				Action<string> onAuthenticatedAction = (t) => {
-					token = t; 
-					if (onAuthenticated != null) 
-						onAuthenticated (targetName);
-					SetState (State.Authenticated);
-				};
-
-				var request = new AuthenticateRequest (onAuthenticatedAction, 
-					(e) => {error = e; SetState (State.Error); }
-				);
-				request.Authenticate (url, email, password);
-			} catch (Exception ex) {
-				// If we leak any exceptions out of this method, the process will die, so be a bit paranoid about it.
-				try {
-					monitor.ReportError ("Unhandled error while registering", null);
-					LoggingService.LogError ("Unhandled exception while registering", ex);
-				} catch {
-				}
-			} finally {
-				monitor.Dispose ();
+			if (string.IsNullOrEmpty (url)) {
+				monitor.ReportError ("A Publish URL is required to register a Publish Target", null);
+				return;
 			}
+			
+			if (string.IsNullOrEmpty (targetName)) {
+				monitor.ReportError ("A Target Name is required to register a Publish Target", null);
+				return;
+			}
+			
+			if (string.IsNullOrEmpty (email)) {
+				monitor.ReportError ("An Email is required to register a Publish Target", null);
+				return;
+			}
+			
+			if (string.IsNullOrEmpty (password)) {
+				monitor.ReportError ("A Password is required to register a Publish Target", null);
+				return;
+			}
+
+			Action<string> onAuthenticatedAction = (t) => {
+				monitor.Log.WriteLine ("done");
+				token = t; 
+				if (onAuthenticated != null) 
+					onAuthenticated (targetName);
+				SetState (State.Authenticated);
+			};
+
+			var request = new AuthenticateRequest (onAuthenticatedAction, 
+				(e) => {
+				monitor.Log.WriteLine ("FAILED");
+				error = e; SetState (State.Error); }
+			);
+			request.Authenticate (url, email, password);
 		}
 
 		void GetApplicationList ()
 		{
+			monitor.Log.Write ("Getting application list...");
 #if DEBUG
 			Console.WriteLine ("GetApplication List.");
 #endif
-			try {
-				monitor = new AggregatedProgressMonitor ();
-				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetOutputProgressMonitor (
-					"Get List of Apperian Ease Applications",
-					MonoDevelop.Ide.Gui.Stock.RunProgramIcon, false, true));
-				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetStatusProgressMonitor (
-					"Get List of Apperian Ease Applications",
-					MonoDevelop.Ide.Gui.Stock.RunProgramIcon, true, true, false));
-				
-				if (string.IsNullOrEmpty (token)) {
-					monitor.ReportError ("An authentication token is required", null);
-					return;
-				}
-
-				Action<IList<EaseApplication>> onGetListAction = (l) => {
-					listedApplications = l;
-					SetState (State.AppsListed);
-				};
-				
-				var request = new GetListRequest (onGetListAction, 
-				                                       (e) => {error = e; SetState (State.Error); }
-				);
-				request.GetList (url, token);
-			} catch (Exception ex) {
-				// If we leak any exceptions out of this method, the process will die, so be a bit paranoid about it.
-				try {
-					monitor.ReportError ("Unhandled error while getting app list", null);
-					LoggingService.LogError ("Unhandled exception while getting app list", ex);
-				} catch {
-				}
-			} finally {
-				monitor.Dispose ();
+			if (string.IsNullOrEmpty (token)) {
+				monitor.ReportError ("An authentication token is required", null);
+				return;
 			}
+
+			Action<IList<EaseApplication>> onGetListAction = (l) => {
+				monitor.Log.WriteLine ("done");
+				listedApplications = l;
+				SetState (State.AppsListed);
+			};
+			
+			var request = new GetListRequest (onGetListAction, 
+			                                       (e) => {
+				monitor.Log.WriteLine ("FAILED");
+				error = e; SetState (State.Error); }
+			);
+			request.GetList (url, token);
 		}
 
 		void Create ()
 		{
+			monitor.Log.Write ("Creating application...");
 #if DEBUG
 			Console.WriteLine ("Create.");
 #endif
-			try {
-				monitor = new AggregatedProgressMonitor ();
-				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetOutputProgressMonitor (
-					"Create Apperian EASE Application",
-					MonoDevelop.Ide.Gui.Stock.RunProgramIcon, false, true));
-				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetStatusProgressMonitor (
-					"Create Apperian EASE Application",
-					MonoDevelop.Ide.Gui.Stock.RunProgramIcon, true, true, false));
-				
-				if (string.IsNullOrEmpty (token)) {
-					monitor.ReportError ("An authentication token is required", null);
-					return;
-				}
-				
-				Action<Transaction> onCreateAction = (t) => {
-					transactionId = t.Id;
-					fileUploadUrl = t.FileUploadUrl;
-					SetState (State.Created);
-				};
-				
-				var request = new CreateRequest (onCreateAction, 
-				                                  (e) => {error = e; SetState (State.Error); }
-				);
-				request.Create (url, token);
-			} catch (Exception ex) {
-				// If we leak any exceptions out of this method, the process will die, so be a bit paranoid about it.
-				try {
-					monitor.ReportError ("Unhandled error while creating", null);
-					LoggingService.LogError ("Unhandled exception while creating", ex);
-				} catch {
-				}
-			} finally {
-				monitor.Dispose ();
+			if (string.IsNullOrEmpty (token)) {
+				monitor.ReportError ("An authentication token is required", null);
+				return;
 			}
+			
+			Action<Transaction> onCreateAction = (t) => {
+				monitor.Log.WriteLine ("done");
+				transactionId = t.Id;
+				fileUploadUrl = t.FileUploadUrl;
+				SetState (State.Created);
+			};
+			
+			var request = new CreateRequest (onCreateAction, 
+			                                  (e) => {
+				monitor.Log.WriteLine ("FAILED");
+				error = e; SetState (State.Error); }
+			);
+			request.Create (url, token);
 		}
 
 		void Update ()
 		{
+			monitor.Log.Write ("Updating application...");
 #if DEBUG
 			Console.WriteLine ("Update.");
 #endif
-			try {
-				monitor = new AggregatedProgressMonitor ();
-				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetOutputProgressMonitor (
-					"Update Apperian EASE Application",
-					MonoDevelop.Ide.Gui.Stock.RunProgramIcon, false, true));
-				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetStatusProgressMonitor (
-					"Update Apperian EASE Application",
-					MonoDevelop.Ide.Gui.Stock.RunProgramIcon, true, true, false));
-				
-				if (string.IsNullOrEmpty (token)) {
-					monitor.ReportError ("An authentication token is required", null);
-					return;
-				}
-
-				if (string.IsNullOrEmpty (appId)) {
-					monitor.ReportError ("An app ID is required", null);
-					return;
-				}
-				Action<Transaction> onUpdateAction = (t) => {
-					transactionId = t.Id;
-					fileUploadUrl = t.FileUploadUrl;
-					SetState (State.Updated);
-				};
-				
-				var request = new UpdateRequest (onUpdateAction, 
-				                                 (e) => {error = e; SetState (State.Error); }
-				);
-				request.Update (url, appId, token);
-			} catch (Exception ex) {
-				// If we leak any exceptions out of this method, the process will die, so be a bit paranoid about it.
-				try {
-					monitor.ReportError ("Unhandled error while updating", null);
-					LoggingService.LogError ("Unhandled exception while updating", ex);
-				} catch {
-				}
-			} finally {
-				monitor.Dispose ();
+			if (string.IsNullOrEmpty (token)) {
+				monitor.ReportError ("An authentication token is required", null);
+				return;
 			}
+
+			if (string.IsNullOrEmpty (appId)) {
+				monitor.ReportError ("An app ID is required", null);
+				return;
+			}
+			Action<Transaction> onUpdateAction = (t) => {
+				monitor.Log.WriteLine ("done");
+				transactionId = t.Id;
+				fileUploadUrl = t.FileUploadUrl;
+				SetState (State.Updated);
+			};
+			
+			var request = new UpdateRequest (onUpdateAction, 
+			                                 (e) => {
+				monitor.Log.WriteLine ("FAILED");
+				error = e; 
+				SetState (State.Error); 
+			}
+			);
+			request.Update (url, appId, token);
 		}
 
 		void Upload ()
 		{
+			monitor.Log.Write ("Uploading application...");
 #if DEBUG
 			Console.WriteLine ("Upload.");
 #endif
-			try {
-				monitor = new AggregatedProgressMonitor ();
-				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetOutputProgressMonitor (
-					"Upload Apperian EASE Application",
-					MonoDevelop.Ide.Gui.Stock.RunProgramIcon, false, true));
-				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetStatusProgressMonitor (
-					"Upload Apperian EASE Application",
-					MonoDevelop.Ide.Gui.Stock.RunProgramIcon, true, true, false));
-				
-				if (string.IsNullOrEmpty (fileUploadUrl)) {
-					monitor.ReportError ("An file upload URL is required", null);
-					return;
-				}
-				
-				if (string.IsNullOrEmpty (transactionId)) {
-					monitor.ReportError ("A transaction ID is required", null);
-					return;
-				}
-
-				Action<string> onUploadAction = (r) => {
-					fileId = r;
-					SetState (State.Uploaded);
-				};
-				
-				var request = new UploadRequest (onUploadAction, 
-				                                 (e) => {error = e; SetState (State.Error); }
-				);
-				request.Upload (fileUploadUrl, transactionId, GetIpaFilename (project as IPhoneProject, configuration as IPhoneProjectConfiguration));
-			} catch (Exception ex) {
-				// If we leak any exceptions out of this method, the process will die, so be a bit paranoid about it.
-				try {
-					monitor.ReportError ("Unhandled error while uploading", null);
-					LoggingService.LogError ("Unhandled exception while uploading", ex);
-				} catch {
-				}
-			} finally {
-				monitor.Dispose ();
+			if (string.IsNullOrEmpty (fileUploadUrl)) {
+				monitor.ReportError ("An file upload URL is required", null);
+				return;
 			}
+			
+			if (string.IsNullOrEmpty (transactionId)) {
+				monitor.ReportError ("A transaction ID is required", null);
+				return;
+			}
+
+			Action<string> onUploadAction = (r) => {
+				monitor.Log.WriteLine ("done");
+				fileId = r;
+				SetState (State.Uploaded);
+			};
+			
+			var request = new UploadRequest (onUploadAction, 
+			                                 (e) => {
+				monitor.Log.WriteLine ("FAILED");
+				error = e; 
+				SetState (State.Error); 
+			});
+			request.Upload (fileUploadUrl, transactionId, GetIpaFilename (Project as IPhoneProject, Configuration as IPhoneProjectConfiguration));
 		}
 
 		void Publish ()
 		{
-			//#if DEBUG
-			//Console.WriteLine ("Publish.");
-			//#endif
-			//try {
-			//	monitor = new AggregatedProgressMonitor ();
-			//	monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetOutputProgressMonitor (
-			//		"Publish to Apperian EASE Application",
-			//		MonoDevelop.Ide.Gui.Stock.RunProgramIcon, false, true));
-			//	monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetStatusProgressMonitor (
-			//		"Publish to Apperian EASE Application",
-			//		MonoDevelop.Ide.Gui.Stock.RunProgramIcon, true, true, false));
-			//	
-			//	if (string.IsNullOrEmpty (token)) {
-			//		monitor.ReportError ("An authentication token is required", null);
-			//		return;
-			//	}
-			//
-			//	if (string.IsNullOrEmpty (transactionId)) {
-			//		monitor.ReportError ("A trnasaction ID is required", null);
-			//		return;
-			//	}
-			//
-			//	if (string.IsNullOrEmpty (fileId)) {
-			//		monitor.ReportError ("A file ID is required", null);
-			//		return;
-			//	}
-			//
-			//	if (metadata == null) {
-			//		monitor.ReportError ("metadata is required", null);
-			//		return;
-			//	}
-			//
-			//	Action<string> onPublishAction = (t) => {
-			//		appId = t;
-			//		SetState (State.Done);
-			//	};
-			//	
-			//	var request = new PublishRequest (onPublishAction, 
-			//	                                 (e) => {error = e; SetState (State.Error); }
-			//	);
-			//	request.Publish (url, appId, token);
-			//} catch (Exception ex) {
-			//	// If we leak any exceptions out of this method, the process will die, so be a bit paranoid about it.
-			//	try {
-			//		monitor.ReportError ("Unhandled error while updating", null);
-			//		LoggingService.LogError ("Unhandled exception while updating", ex);
-			//	} catch {
-			//	}
-			//} finally {
-			//	monitor.Dispose ();
-			//}
+			monitor.Log.Write ("Publishing application...");
+#if DEBUG
+			Console.WriteLine ("Publish.");
+#endif
+			if (string.IsNullOrEmpty (token)) {
+				monitor.ReportError ("An authentication token is required", null);
+				return;
+			}
+			
+			if (string.IsNullOrEmpty (transactionId)) {
+				monitor.ReportError ("A trnasaction ID is required", null);
+				return;
+			}
+			
+			if (string.IsNullOrEmpty (fileId)) {
+				monitor.ReportError ("A file ID is required", null);
+				return;
+			}
+			
+			if (metadata == null) {
+				monitor.ReportError ("metadata is required", null);
+				return;
+			}
+			
+			Action<string> onPublishAction = (t) => {
+				monitor.Log.WriteLine ("done");
+				appId = t;
+				SetState (State.Done);
+			};
+			
+			var request = new PublishRequest (onPublishAction, 
+			                                 (e) => {
+				monitor.Log.WriteLine ("FAILED");
+				error = e; 
+				SetState (State.Error); 
+			});
+			request.Publish (url, token, transactionId, fileId, metadata);
 		}
 
 		static string GetIpaFilename (IPhoneProject proj, IPhoneProjectConfiguration conf)

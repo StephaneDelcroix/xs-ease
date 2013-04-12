@@ -9,14 +9,15 @@
 // Contains code from Xamarin, Inc. with authorization.
 //
 using System;
-using MonoDevelop.Components.Commands;
+using System.Threading;
+
+using Gtk;
 
 using MonoDevelop.Ide;
 using MonoDevelop.Core;
 using MonoDevelop.IPhone;
 using MonoDevelop.Projects;
-
-using Gtk;
+using MonoDevelop.Components.Commands;
 
 namespace Apperian.Ease.Publisher
 {
@@ -77,9 +78,9 @@ namespace Apperian.Ease.Publisher
 							"Project did not build successfully");
 						return;
 					}
-					var publisher = new EasePublisher (proj, conf, dialog.TargetUrl, dialog.TargetName, dialog.TargetEmail, dialog.TargetPassword, null, null, OnAuthenticated, null, null);
+					var publisher = new EasePublisher (dialog.TargetUrl, dialog.TargetName, dialog.TargetEmail, dialog.TargetPassword, dialog.Metadata);
 
-					var t = new System.Threading.Thread (publisher.Start) {
+					var t = new Thread (()=>{publisher.Start(null, null, null);}) {
 						IsBackground = true,
 						Name = "Publish to Apperian EASE",
 					};
@@ -123,10 +124,6 @@ namespace Apperian.Ease.Publisher
 			return false;
 		}
 
-		void OnAuthenticated (string target)
-		{
-			//TODO: save the target if it's not done already
-		}
 	}
 }
 
