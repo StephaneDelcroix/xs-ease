@@ -39,7 +39,8 @@ namespace Apperian.Ease.Publisher
 
 		string token, appId, transactionId, fileUploadUrl, fileId;
 
-		public Project Project { get; private set; }
+		public static Project Project { get { return PublishHandler.GetActiveExecutableIPhoneProject (); } }
+
 		public ProjectConfiguration Configuration { get; private set;}
 		string url, targetName, email, password;
 		public EaseMetadata Metadata { get; private set;}
@@ -60,7 +61,6 @@ namespace Apperian.Ease.Publisher
 		AggregatedProgressMonitor monitor;
 		public EasePublisher (string url, string targetName, string email, string password, EaseMetadata metadata)
 		{
-			this.Project = PublishHandler.GetActiveExecutableIPhoneProject ();
 			this.Configuration = (IPhoneProjectConfiguration) Project.GetConfiguration (IdeApp.Workspace.ActiveConfiguration);
 
 			this.url = url;

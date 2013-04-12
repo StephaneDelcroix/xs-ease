@@ -17,7 +17,7 @@ namespace Apperian.Ease.Publisher
 	{
 		RegisterDialog registerdialog;
 		List<Tuple<string,string,string,string>> targets;
-
+		EasePublisher publisher;
 		public PublisherDialog ()
 		{
 			this.Build ();
@@ -47,10 +47,13 @@ namespace Apperian.Ease.Publisher
 			}
 		}
 
+		string settingsKey = "ApperianEaseSettings";
+
 		void LoadTargets ()
 		{
-			targets = new List<Tuple<string,string,string,string>> ();
-			//TODO load saved targets
+			targets = EasePublisher.Project.UserProperties.GetValue<List<Tuple<string,string,string,string>>> (settingsKey);
+			if (targets == null)
+				targets = new List<Tuple<string,string,string,string>> ();
 		}
 
 		void FillCombo ()
@@ -86,7 +89,7 @@ namespace Apperian.Ease.Publisher
 			}
 		}
 
-		EasePublisher publisher;
+
 		void OnTargetChanged (object sender, EventArgs e)
 		{
 			buttonPublish.Sensitive = false;
@@ -97,7 +100,7 @@ namespace Apperian.Ease.Publisher
 
 		void OnAuthenticated (string targetname)
 		{
-			//TODO save settings
+			EasePublisher.Project.UserProperties.SetValue<List<Tuple<string,string,string,string>>> (settingsKey, targets);
 		}
 
 		void OnSuccess ()
@@ -105,8 +108,8 @@ namespace Apperian.Ease.Publisher
 			buttonPublish.Sensitive = true;
 			nameEntry.Sensitive = authorEntry.Sensitive = versionEntry.Sensitive = descriptionEntry.Sensitive = versionNotesEntry.Sensitive = true;
 			nameEntry.Text = publisher.ApplicationName;
-			authorEntry.Text = publisher.Project.AuthorInformation.Name;
-			versionEntry.Text = publisher.Project.Version;
+			authorEntry.Text = EasePublisher.Project.AuthorInformation.Name;
+			versionEntry.Text = EasePublisher.Project.Version;
 				
 			if (publisher.Metadata != null) {
 				descriptionEntry.Text = publisher.Metadata.ShortDescription;
