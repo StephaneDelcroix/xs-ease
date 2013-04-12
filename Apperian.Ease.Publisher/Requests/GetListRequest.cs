@@ -60,6 +60,14 @@ namespace Apperian.Ease.Publisher
 							ApplicationType = app ["type"],
 							Name = app ["name"],
 							Id = app ["ID"],
+							Metadata = new EaseMetadata {
+								Author = app ["author"],
+								Name = app ["name"],
+								ShortDescription = app ["shortdescription"],
+								LongDescription = app ["longdescription"],
+								Version = app ["version"],
+								VersionNotes = app ["versionNotes"],
+							},
 						};
 						list.Add (easeApp);
 					}

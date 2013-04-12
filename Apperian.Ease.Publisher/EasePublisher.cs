@@ -42,7 +42,7 @@ namespace Apperian.Ease.Publisher
 		public Project Project { get; private set; }
 		public ProjectConfiguration Configuration { get; private set;}
 		string url, targetName, email, password;
-		EaseMetadata metadata;
+		public EaseMetadata Metadata { get; private set;}
 
 		public string ApplicationName {
 			get {
@@ -52,7 +52,6 @@ namespace Apperian.Ease.Publisher
 				return Project.Name;
 			}
 		}
-		IList<EaseApplication> listedApplications;
 		Exception error;
 		Action<string> onAuthenticated;
 		Action onSuccess;
@@ -68,7 +67,7 @@ namespace Apperian.Ease.Publisher
 			this.targetName = targetName;
 			this.email = email;
 			this.password = password;
-			this.metadata = metadata;
+			this.Metadata = metadata;
 		}
 
 		public void Start (Action<string> authenticated, Action success, Action error)
@@ -117,8 +116,8 @@ namespace Apperian.Ease.Publisher
 				GetApplicationList ();
 				break;
 			case State.AppsListed:
-				var app = listedApplications.Where (ea => ea.Name == ApplicationName).FirstOrDefault ();
-				if (app == null)
+				//var app = listedApplications.Where (ea => ea.Name == ApplicationName).FirstOrDefault ();
+				if (appId == null)
 					Create ();
 				else
 					Update ();
@@ -131,6 +130,7 @@ namespace Apperian.Ease.Publisher
 				Publish ();
 				break;
 			case State.Done:
+				monitor.Log.WriteLine ("Operation completed successfully");
 				if (onSuccess != null)
 					onSuccess ();
 				break;
@@ -193,9 +193,14 @@ namespace Apperian.Ease.Publisher
 				return;
 			}
 
-			Action<IList<EaseApplication>> onGetListAction = (l) => {
+			Action<IList<EaseApplication>> onGetListAction = (listedApps) => {
 				monitor.Log.WriteLine ("done");
-				listedApplications = l;
+				var projType = (Project is IPhoneProject) ? "iOS App (IPA File)" : "Android App (APK File)";
+				var applicationToUpdate = listedApps.Where(a => a.Name == ApplicationName && a.ApplicationType == projType).FirstOrDefault ();
+				if (applicationToUpdate != null) {
+					appId = applicationToUpdate.Id;
+					Metadata = applicationToUpdate.Metadata;
+				}
 				SetState (State.AppsListed);
 			};
 			
@@ -317,7 +322,7 @@ namespace Apperian.Ease.Publisher
 				return;
 			}
 			
-			if (metadata == null) {
+			if (Metadata == null) {
 				monitor.ReportError ("metadata is required", null);
 				return;
 			}
@@ -334,7 +339,7 @@ namespace Apperian.Ease.Publisher
 				error = e; 
 				SetState (State.Error); 
 			});
-			request.Publish (url, token, transactionId, fileId, metadata);
+			request.Publish (url, token, transactionId, fileId, Metadata);
 		}
 
 		static string GetIpaFilename (IPhoneProject proj, IPhoneProjectConfiguration conf)

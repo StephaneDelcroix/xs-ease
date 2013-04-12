@@ -14,5 +14,6 @@ namespace Apperian.Ease.Publisher
 		public string ApplicationType { get; set; }
 		public string Name { get; set; }
 		public string Id { get; set; }
+		public EaseMetadata Metadata { get; set; }
 	}
 }

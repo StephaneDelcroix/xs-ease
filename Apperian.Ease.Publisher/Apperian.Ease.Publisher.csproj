@@ -92,6 +92,7 @@
     <Compile Include="Requests\UploadRequest.cs" />
     <Compile Include="Model\EaseMetadata.cs" />
     <Compile Include="Requests\PublishRequest.cs" />
+    <Compile Include="StringExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Requests\" />

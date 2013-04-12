@@ -36,13 +36,13 @@ namespace Apperian.Ease.Publisher
 		public string TargetUrl { get { return targets[comboboxTargets.Active].Item2; }}
 		public string TargetEmail { get { return targets[comboboxTargets.Active].Item3; }}
 		public string TargetPassword { get { return targets[comboboxTargets.Active].Item4; }}
-		public EaseMetadata Metadata { get { return new Apperian.Ease.Publisher.EaseMetadata {
+		public EaseMetadata Metadata { get { return new EaseMetadata {
 					Author = authorEntry.Text,
 					LongDescription = descriptionEntry.Text,
 					Name = nameEntry.Text,
 					ShortDescription = descriptionEntry.Text,
 					Version = versionEntry.Text,
-					VersionNotes = versionNotesEntry.Buffer.Text,
+					VersionNotes = versionNotesEntry.Buffer.Text.TrimAt (1500),
 				};
 			}
 		}
@@ -68,8 +68,6 @@ namespace Apperian.Ease.Publisher
 			}
 
 			comboboxTargets.Model = store;
-			//if (targets.Count > 0)
-			//	comboboxTargets.Active = 0;
 		}
 
 		void OnRegisterClicked (object sender, EventArgs e)
@@ -97,7 +95,7 @@ namespace Apperian.Ease.Publisher
 			publisher.GetList (OnAuthenticated, OnSuccess, null);
 		}
 
-		void OnAuthenticated (string strgetname)
+		void OnAuthenticated (string targetname)
 		{
 			//TODO save settings
 		}
@@ -109,8 +107,12 @@ namespace Apperian.Ease.Publisher
 			nameEntry.Text = publisher.ApplicationName;
 			authorEntry.Text = publisher.Project.AuthorInformation.Name;
 			versionEntry.Text = publisher.Project.Version;
-
-			Console.WriteLine ("SUCCESS, fill Description");
+				
+			if (publisher.Metadata != null) {
+				descriptionEntry.Text = publisher.Metadata.ShortDescription;
+				versionNotesEntry.Buffer.Text = publisher.Metadata.VersionNotes;
+			}
+		
 		}
 	}
 }
