@@ -7,7 +7,7 @@
   <import>
     <widget-library name="../../../../../../Applications/Xamarin Studio.app/Contents/MacOS/lib/monodevelop/bin/MonoDevelop.Ide.dll" />
     <widget-library name="../../../../../../Applications/Xamarin Studio.app/Contents/MacOS/lib/monodevelop/AddIns/MonoDevelop.IPhone/MonoDevelop.IPhone.dll" />
-    <widget-library name="../bin/Debug/Apperian.Ease.Publisher.dll" internal="true" />
+    <widget-library name="../bin/Release/Apperian.Ease.Publisher.dll" internal="true" />
   </import>
   <widget class="Gtk.Dialog" id="Apperian.Ease.Publisher.PublisherDialog" design-size="574 393">
     <property name="MemberName" />

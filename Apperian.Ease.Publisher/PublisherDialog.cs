@@ -9,6 +9,9 @@
 using System;
 using System.Collections.Generic;
 
+using MonoDevelop.Ide;
+using MonoDevelop.Projects;
+
 using Gtk;
 
 namespace Apperian.Ease.Publisher
@@ -26,6 +29,10 @@ namespace Apperian.Ease.Publisher
 			FillCombo ();
 
 			nameEntry.Sensitive = authorEntry.Sensitive = versionEntry.Sensitive = descriptionEntry.Sensitive = versionNotesEntry.Sensitive = false;
+
+			nameEntry.Text = PublishHandler.GetActiveMobileProject ().GetApplicationName ();
+			authorEntry.Text = PublishHandler.GetActiveMobileProject ().AuthorInformation.Name;
+			versionEntry.Text = PublishHandler.GetActiveMobileProject ().Version;
 
 			buttonRegister.Clicked += OnRegisterClicked;
 			comboboxTargets.Changed += OnTargetChanged;
@@ -52,7 +59,7 @@ namespace Apperian.Ease.Publisher
 		void LoadTargets ()
 		{
 			targets = new List<Tuple<string,string,string,string>> ();
-			var prefs = EasePublisher.Project.UserProperties.GetValue<string> (settingsKey);
+			var prefs = PublishHandler.GetActiveMobileProject ().UserProperties.GetValue<string> (settingsKey);
 			if (prefs == null)
 				return;
 			var splitted = prefs.Split (new [] {'|'});
@@ -100,7 +107,9 @@ namespace Apperian.Ease.Publisher
 		{
 			buttonPublish.Sensitive = false;
 			nameEntry.Sensitive = authorEntry.Sensitive = versionEntry.Sensitive = descriptionEntry.Sensitive = versionNotesEntry.Sensitive = false;
-			publisher = new EasePublisher (TargetUrl, TargetName, TargetEmail, TargetPassword, null);
+			var proj = PublishHandler.GetActiveMobileProject();
+			var conf = proj.GetConfiguration(IdeApp.Workspace.ActiveConfiguration) as DotNetProjectConfiguration;
+			publisher = new EasePublisher (proj, conf,  TargetUrl, TargetName, TargetEmail, TargetPassword, null);
 			publisher.GetList (OnAuthenticated, OnSuccess, null);
 		}
 
@@ -111,16 +120,14 @@ namespace Apperian.Ease.Publisher
 				prefs += String.Format ("{0}|{1}|{2}|{3}|", t.Item1, t.Item2, t.Item3, t.Item4);
 			if (prefs.Length > 0)
 				prefs = prefs.Substring (0, prefs.Length-1);
-			EasePublisher.Project.UserProperties.SetValue<string> (settingsKey, prefs);
+
+			PublishHandler.GetActiveMobileProject ().UserProperties.SetValue<string> (settingsKey, prefs);
 		}
 
 		void OnSuccess ()
 		{
 			buttonPublish.Sensitive = true;
 			nameEntry.Sensitive = authorEntry.Sensitive = versionEntry.Sensitive = descriptionEntry.Sensitive = versionNotesEntry.Sensitive = true;
-			nameEntry.Text = publisher.ApplicationName;
-			authorEntry.Text = EasePublisher.Project.AuthorInformation.Name;
-			versionEntry.Text = EasePublisher.Project.Version;
 				
 			if (publisher.Metadata != null) {
 				descriptionEntry.Text = publisher.Metadata.ShortDescription;

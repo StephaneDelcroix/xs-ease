@@ -9,6 +9,8 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Apperian.Ease.Publisher</RootNamespace>
     <AssemblyName>Apperian.Ease.Publisher</AssemblyName>
+    <ReleaseVersion>0.0.7</ReleaseVersion>
+    <SynchReleaseVersion>false</SynchReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -72,6 +74,14 @@
     <Reference Include="Xamarin.Ide">
       <HintPath>..\..\..\..\..\Applications\Xamarin Studio.app\Contents\MacOS\lib\monodevelop\AddIns\Xamarin.Ide\Xamarin.Ide.dll</HintPath>
     </Reference>
+    <Reference Include="MonoDevelop.MonoDroid">
+      <HintPath>..\..\..\..\..\Applications\Xamarin Studio.app\Contents\MacOS\lib\monodevelop\AddIns\MonoDevelop.MonoDroid\MonoDevelop.MonoDroid.dll</HintPath>
+    </Reference>
+    <Reference Include="Xamarin.AndroidTools">
+      <HintPath>..\..\..\..\..\Applications\Xamarin Studio.app\Contents\MacOS\lib\monodevelop\AddIns\MonoDevelop.MonoDroid\Xamarin.AndroidTools.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PublishHandler.cs" />
@@ -93,6 +103,7 @@
     <Compile Include="Model\EaseMetadata.cs" />
     <Compile Include="Requests\PublishRequest.cs" />
     <Compile Include="StringExtensions.cs" />
+    <Compile Include="ProjectExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Requests\" />

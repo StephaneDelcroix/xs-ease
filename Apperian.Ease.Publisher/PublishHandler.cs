@@ -16,6 +16,7 @@ using Gtk;
 using MonoDevelop.Ide;
 using MonoDevelop.Core;
 using MonoDevelop.IPhone;
+using MonoDevelop.MonoDroid;
 using MonoDevelop.Projects;
 using MonoDevelop.Components.Commands;
 
@@ -23,69 +24,78 @@ namespace Apperian.Ease.Publisher
 {
 	public class PublishHandler : CommandHandler
 	{
-		public static IPhoneProject GetActiveExecutableIPhoneProject ()
-		{
-			IPhoneProject phoneProject = IdeApp.ProjectOperations.CurrentSelectedProject as IPhoneProject;
-
-			if (phoneProject != null && phoneProject.CompileTarget == CompileTarget.Exe)
-				return phoneProject;
-
-			Solution currentSelectedSolution = IdeApp.ProjectOperations.CurrentSelectedSolution;
-
-			if (currentSelectedSolution != null) {
-				phoneProject = (currentSelectedSolution.StartupItem as IPhoneProject);
-
-				if (phoneProject != null && phoneProject.CompileTarget == CompileTarget.Exe)
-					return phoneProject;
-			}
-
-			return null;
-		}
-
 		protected override void Run ()
 		{
 #if DEBUG
 			Console.WriteLine ("Run");
 #endif
-			var proj = GetActiveExecutableIPhoneProject ();
-			var conf = (IPhoneProjectConfiguration) proj.GetConfiguration (IdeApp.Workspace.ActiveConfiguration);
+			var proj = GetActiveMobileProject ();
+			var iphoneproject = proj as IPhoneProject;
+			var androidproject = proj as MonoDroidProject;
 
-			//Enable IPA
-			if (!conf.BuildIpa) {
-				QuestionMessage qm = new QuestionMessage ();
-				qm.Buttons.Add (AlertButton.Yes);
-				qm.Buttons.Add (AlertButton.No);
-				qm.Text = GettextCatalog.GetString ("Enable ad-hoc/enterprise packaging");
-				qm.SecondaryText = 
-					"You must enable ad-hoc/enterprise packaging (IPA support)" +
-					" if you want to publish your application using Apperian. " +
-					"Do you want to enable ad-hoc/enterprise packaging?";
-				var response = MessageService.AskQuestion (qm);
-				if (response == AlertButton.No)
-					return;
-				conf.BuildIpa = true;
-				IdeApp.ProjectOperations.Save (proj);
+			if (iphoneproject != null) {
+				var conf = (IPhoneProjectConfiguration) proj.GetConfiguration (IdeApp.Workspace.ActiveConfiguration);
+				
+				//Enable IPA
+				if (!conf.BuildIpa) {
+					QuestionMessage qm = new QuestionMessage ();
+					qm.Buttons.Add (AlertButton.Yes);
+					qm.Buttons.Add (AlertButton.No);
+					qm.Text = GettextCatalog.GetString ("Enable ad-hoc/enterprise packaging");
+					qm.SecondaryText = 
+						"You must enable ad-hoc/enterprise packaging (IPA support)" +
+						" if you want to publish your application using Apperian. " +
+						"Do you want to enable ad-hoc/enterprise packaging?";
+					var response = MessageService.AskQuestion (qm);
+					if (response == AlertButton.No)
+						return;
+					conf.BuildIpa = true;
+					IdeApp.ProjectOperations.Save (proj);
+				}
 			}
 
+			if (androidproject != null) {
+				//Add Application Manifest
+				if (androidproject.AndroidManifest == FilePath.Null || androidproject.AndroidManifest == FilePath.Empty) {
+					QuestionMessage qm = new QuestionMessage ();
+					qm.Buttons.Add (AlertButton.Yes);
+					qm.Buttons.Add (AlertButton.No);
+					qm.Text = GettextCatalog.GetString ("Add Android manifest");
+					qm.SecondaryText = 
+						"The project has no Anbdroid manifest." +
+							"Do you want to add one ?";
+					var response = MessageService.AskQuestion (qm);
+					if (response == AlertButton.No)
+						return;
+					androidproject.AddManifest();
+					IdeApp.ProjectOperations.Save (proj);
+				}
+			}
 
 			var dialog = new PublisherDialog ();
 			dialog.ShowAll ();
 			if ((ResponseType)dialog.Run () == ResponseType.Ok) {
-				IdeApp.ProjectOperations.Build (IdeApp.ProjectOperations.CurrentSelectedProject).Completed += delegate(IAsyncOperation op) {
+
+				OperationHandler onbuild = 
+				(IAsyncOperation op) => {
 					if (!op.Success) {
 						MessageService.ShowError (
 							"Cannot publish to Apperian EASE",
 							"Project did not build successfully");
 						return;
 					}
-					var publisher = new EasePublisher (dialog.TargetUrl, dialog.TargetName, dialog.TargetEmail, dialog.TargetPassword, dialog.Metadata);
+					var publisher = new EasePublisher (proj, (DotNetProjectConfiguration)proj.GetConfiguration (IdeApp.Workspace.ActiveConfiguration), dialog.TargetUrl, dialog.TargetName, dialog.TargetEmail, dialog.TargetPassword, dialog.Metadata);
 
 					var t = new Thread (()=>{publisher.Start(null, null, null);}) {
 						IsBackground = true,
 						Name = "Publish to Apperian EASE",
 					};
-					t.Start ();
+					t.Start (); 
 				};
+				if (androidproject != null)
+					androidproject.PackageForAndroid (IdeApp.Workspace.ActiveConfiguration).Completed += onbuild;
+				else
+					IdeApp.ProjectOperations.Build (IdeApp.ProjectOperations.CurrentSelectedProject).Completed += onbuild;
 			}
 			dialog.Hide ();
 		}
@@ -101,18 +111,19 @@ namespace Apperian.Ease.Publisher
 
 		bool IsVisibleIphone ()
 		{
-			var proj = GetActiveExecutableIPhoneProject ();
+			var proj = GetActiveMobileProject<IPhoneProject> (requireExe: true);
 			return proj != null;
 		}
 
 		bool IsVisibleAndroid ()
 		{
-			return false;
+			var proj = GetActiveMobileProject<MonoDroidProject> (requireExe: false);
+			return proj != null;
 		}
 
 		bool IsEnabledIPhone ()
 		{
-			var proj = GetActiveExecutableIPhoneProject ();
+			var proj = GetActiveMobileProject<IPhoneProject> (requireExe: true);
 			if (proj == null)
 				return false;
 			var conf = (IPhoneProjectConfiguration) proj.GetConfiguration (IdeApp.Workspace.ActiveConfiguration);
@@ -121,9 +132,35 @@ namespace Apperian.Ease.Publisher
 
 		bool IsEnabledAndroid ()
 		{
-			return false;
+			var proj = GetActiveMobileProject<MonoDroidProject> (requireExe: false);
+			if (proj == null)
+				return false;
+			return true;
 		}
 
+		public static DotNetProject GetActiveMobileProject ()
+		{
+			return (DotNetProject)GetActiveMobileProject<IPhoneProject> (true) ?? 
+				(DotNetProject)GetActiveMobileProject<MonoDroidProject> (false);
+		}
+		
+		static T GetActiveMobileProject<T> (bool requireExe) where T : DotNetProject
+		{
+			T project = IdeApp.ProjectOperations.CurrentSelectedProject as T;
+			
+			if (project != null && (!requireExe || project.CompileTarget == CompileTarget.Exe))
+				return project;
+			
+			Solution currentSelectedSolution = IdeApp.ProjectOperations.CurrentSelectedSolution;
+			
+			if (currentSelectedSolution != null) {
+				project = (currentSelectedSolution.StartupItem as T);
+				
+				if (project != null && (!requireExe || project.CompileTarget == CompileTarget.Exe))
+					return project;
+			}
+			
+			return null;
+		}
 	}
 }
-

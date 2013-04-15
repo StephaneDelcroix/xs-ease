@@ -15,6 +15,7 @@ using MonoDevelop.Ide;
 using MonoDevelop.Core;
 using MonoDevelop.Core.ProgressMonitoring;
 using MonoDevelop.IPhone;
+using MonoDevelop.MonoDroid;
 using MonoDevelop.Projects;
 
 namespace Apperian.Ease.Publisher
@@ -34,34 +35,26 @@ namespace Apperian.Ease.Publisher
 			Done,
 		}
 
-		State state = State.Idle;
 		State stopAfter = State.Done;
 
 		string token, appId, transactionId, fileUploadUrl, fileId;
 
-		public static Project Project { get { return PublishHandler.GetActiveExecutableIPhoneProject (); } }
+		DotNetProject Project { get;  set;}
+		DotNetProjectConfiguration Configuration { get;  set;}
 
-		public ProjectConfiguration Configuration { get; private set;}
 		string url, targetName, email, password;
 		public EaseMetadata Metadata { get; private set;}
 
-		public string ApplicationName {
-			get {
-				var iphoneconfig = Configuration as IPhoneProjectConfiguration;
-				if (iphoneconfig != null && !string.IsNullOrEmpty(iphoneconfig.IpaPackageName))
-					return iphoneconfig.IpaPackageName;
-				return Project.Name;
-			}
-		}
 		Exception error;
 		Action<string> onAuthenticated;
 		Action onSuccess;
 		Action onError;
 
 		AggregatedProgressMonitor monitor;
-		public EasePublisher (string url, string targetName, string email, string password, EaseMetadata metadata)
+		public EasePublisher (DotNetProject project, DotNetProjectConfiguration configuration, string url, string targetName, string email, string password, EaseMetadata metadata)
 		{
-			this.Configuration = (IPhoneProjectConfiguration) Project.GetConfiguration (IdeApp.Workspace.ActiveConfiguration);
+			Project = project;
+			Configuration = configuration;
 
 			this.url = url;
 			this.targetName = targetName;
@@ -72,9 +65,9 @@ namespace Apperian.Ease.Publisher
 
 		public void Start (Action<string> authenticated, Action success, Action error)
 		{	
-			this.onAuthenticated = authenticated;
-			this.onSuccess = success;
-			this.onError = error;
+			onAuthenticated = authenticated;
+			onSuccess = success;
+			onError = error;
 			try {
 				monitor = new AggregatedProgressMonitor ();
 				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetOutputProgressMonitor (
@@ -97,10 +90,10 @@ namespace Apperian.Ease.Publisher
 			}
 		}
 
-		public void GetList (Action<string> authenticated, Action success, Action error)
+		public void GetList (Action<string> authenticated, Action success, Action err)
 		{
 			stopAfter = State.AppsListed;
-			Start (authenticated, success, error);
+			Start (authenticated, success, err);
 		}
 
 		void SetState (State newstate)
@@ -196,7 +189,7 @@ namespace Apperian.Ease.Publisher
 			Action<IList<EaseApplication>> onGetListAction = (listedApps) => {
 				monitor.Log.WriteLine ("done");
 				var projType = (Project is IPhoneProject) ? "iOS App (IPA File)" : "Android App (APK File)";
-				var applicationToUpdate = listedApps.Where(a => a.Name == ApplicationName && a.ApplicationType == projType).FirstOrDefault ();
+				var applicationToUpdate = listedApps.Where(a => a.Name == Project.GetApplicationName () && a.ApplicationType == projType).FirstOrDefault ();
 				if (applicationToUpdate != null) {
 					appId = applicationToUpdate.Id;
 					if (stopAfter == State.AppsListed)
@@ -299,7 +292,7 @@ namespace Apperian.Ease.Publisher
 				error = e; 
 				SetState (State.Error); 
 			});
-			request.Upload (fileUploadUrl, transactionId, GetIpaFilename (Project as IPhoneProject, Configuration as IPhoneProjectConfiguration));
+			request.Upload (fileUploadUrl, transactionId, Project.GetBuildArtifact(Configuration));
 		}
 
 		void Publish ()
@@ -341,23 +334,6 @@ namespace Apperian.Ease.Publisher
 				SetState (State.Error); 
 			});
 			request.Publish (url, token, transactionId, fileId, Metadata);
-		}
-
-		static string GetIpaFilename (IPhoneProject proj, IPhoneProjectConfiguration conf)
-		{
-			MonoDevelop.MacDev.PlistEditor.PDictionary a;
-			var plist = proj.GetInfoPlistDocument ();
-			var name = conf.IpaPackageName;
-			if (string.IsNullOrEmpty (name)) {
-				name = conf.CompiledOutputName.FileNameWithoutExtension;
-				string version = null;
-				//var version = plist != null ? plist.GetCFBundleVersion () : null;
-				if (!string.IsNullOrEmpty (version))
-					name += "-" + version;
-			}
-			if (!name.EndsWith (".ipa", StringComparison.OrdinalIgnoreCase))
-				name += ".ipa";
-			return Path.Combine (conf.OutputDirectory, name);
 		}
 
 		void ReportError ()
