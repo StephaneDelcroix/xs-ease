@@ -7,7 +7,7 @@
        description	= "Provides upload of builds to Apperian EASE"
        category		= "Mobile Development"
        icon32		= "icons/ease.png"
-       version		= "0.0.7">
+       version		= "0.0.8">
 
 	<Runtime>
 		<Import file="icons/ease.png" />

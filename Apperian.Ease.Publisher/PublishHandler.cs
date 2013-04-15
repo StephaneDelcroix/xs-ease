@@ -111,19 +111,19 @@ namespace Apperian.Ease.Publisher
 
 		bool IsVisibleIphone ()
 		{
-			var proj = GetActiveMobileProject<IPhoneProject> (requireExe: true);
+			var proj = GetActiveMobileProject() as IPhoneProject;
 			return proj != null;
 		}
 
 		bool IsVisibleAndroid ()
 		{
-			var proj = GetActiveMobileProject<MonoDroidProject> (requireExe: false);
+			var proj = GetActiveMobileProject() as MonoDroidProject;
 			return proj != null;
 		}
 
 		bool IsEnabledIPhone ()
 		{
-			var proj = GetActiveMobileProject<IPhoneProject> (requireExe: true);
+			var proj = GetActiveMobileProject() as IPhoneProject;
 			if (proj == null)
 				return false;
 			var conf = (IPhoneProjectConfiguration) proj.GetConfiguration (IdeApp.Workspace.ActiveConfiguration);
@@ -132,34 +132,32 @@ namespace Apperian.Ease.Publisher
 
 		bool IsEnabledAndroid ()
 		{
-			var proj = GetActiveMobileProject<MonoDroidProject> (requireExe: false);
-			if (proj == null)
-				return false;
-			return true;
+			var proj = GetActiveMobileProject() as MonoDroidProject;
+			return proj != null;
 		}
 
 		public static DotNetProject GetActiveMobileProject ()
 		{
-			return (DotNetProject)GetActiveMobileProject<IPhoneProject> (true) ?? 
-				(DotNetProject)GetActiveMobileProject<MonoDroidProject> (false);
-		}
-		
-		static T GetActiveMobileProject<T> (bool requireExe) where T : DotNetProject
-		{
-			T project = IdeApp.ProjectOperations.CurrentSelectedProject as T;
-			
-			if (project != null && (!requireExe || project.CompileTarget == CompileTarget.Exe))
-				return project;
-			
-			Solution currentSelectedSolution = IdeApp.ProjectOperations.CurrentSelectedSolution;
-			
-			if (currentSelectedSolution != null) {
-				project = (currentSelectedSolution.StartupItem as T);
-				
-				if (project != null && (!requireExe || project.CompileTarget == CompileTarget.Exe))
+			var project = IdeApp.ProjectOperations.CurrentSelectedProject as DotNetProject;
+			if (project != null) {
+				if (project is IPhoneProject && project.CompileTarget == CompileTarget.Exe)
+					return project;
+				if (project is MonoDroidProject)
 					return project;
 			}
-			
+
+			var solution = IdeApp.ProjectOperations.CurrentSelectedSolution;
+			if (solution == null)
+				return null;
+
+			project = solution.StartupItem as DotNetProject;
+			if (project != null) {
+				if (project is IPhoneProject && project.CompileTarget == CompileTarget.Exe)
+					return project;
+				if (project is MonoDroidProject)
+					return project;
+			}
+
 			return null;
 		}
 	}

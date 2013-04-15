@@ -44,7 +44,7 @@ namespace Apperian.Ease.Publisher
 #endif
 				JsonValue result = JsonValue.Parse (content);
 				if (result.ContainsKey ("error")) {
-					string errormessage = String.Format ("{0} - {1}", result["error"]["message"], result["error"]["data"]["detailedMessage"]);
+					string errormessage = String.Format ("{0}", result["error"]["message"]);
 #if DEBUG 
 					Console.WriteLine (">>>ERROR>>>" + errormessage);
 #endif

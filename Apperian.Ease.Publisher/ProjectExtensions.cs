@@ -30,7 +30,7 @@ namespace Apperian.Ease.Publisher
 				return iphoneconfig.IpaPackageName;
 
 			var androidproject = project as MonoDroidProject;
-			if (androidproject.AndroidManifest != FilePath.Empty && androidproject.AndroidManifest != FilePath.Null) {
+			if (androidproject != null && androidproject.AndroidManifest != FilePath.Empty && androidproject.AndroidManifest != FilePath.Null) {
 				var manifest = AndroidAppManifest.Load (androidproject.AndroidManifest.FullPath);
 				if (manifest != null && !string.IsNullOrEmpty (manifest.ApplicationLabel))
 					return manifest.ApplicationLabel;
