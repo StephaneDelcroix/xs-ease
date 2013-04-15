@@ -11,23 +11,18 @@ using System.Json;
 
 namespace Apperian.Ease.Publisher
 {
-	public class PublishRequest : JsonRequest
+	public class PublishRequest : JsonRequest<PublishResult>
 	{
-		public PublishRequest (Action<string> success, Action<Exception> error) : base ((new SuccessHandler (success, error)).GetContent, error)
+		public PublishRequest (string url, string token, string transactionid, string fileId, EaseMetadata metadata, Action<PublishResult> success, Action<Exception> error) : base (success, error)
 		{
-		}
-
-		public void Publish (string url, string token, string transactionid, string fileId, EaseMetadata metadata)
-		{
-			var content = String.Format ("{{\"id\": 1, \"apiVersion\": \"1.0\", \"method\": \"com.apperian.eas.apps.publish\", \"params\": {{\"EASEmetadata\" :  {{ \"author\" : \"{0}\", \"longdescription\" : \"{1}\", \"name\" : \"{2}\", \"shortdescription\" : \"{3}\", \"version\" : \"{4}\", \"versionNotes\" : \"{5}\"}}, \"files\" :  {{ \"application\" : \"{6}\"}}, \"token\" : \"{7}\", \"transactionID\" : \"{8}\"}}, \"jsonrpc\": \"2.0\"}}",
+			RequestContent = String.Format ("{{\"id\": 1, \"apiVersion\": \"1.0\", \"method\": \"com.apperian.eas.apps.publish\", \"params\": {{\"EASEmetadata\" :  {{ \"author\" : \"{0}\", \"longdescription\" : \"{1}\", \"name\" : \"{2}\", \"shortdescription\" : \"{3}\", \"version\" : \"{4}\", \"versionNotes\" : \"{5}\"}}, \"files\" :  {{ \"application\" : \"{6}\"}}, \"token\" : \"{7}\", \"transactionID\" : \"{8}\"}}, \"jsonrpc\": \"2.0\"}}",
 			                             metadata.Author, metadata.LongDescription, metadata.Name, metadata.ShortDescription, metadata.Version, metadata.VersionNotes,
 			                             fileId, token, transactionid);
-#if DEBUG
-			Console.WriteLine (content);
-#endif
-			Send (url, "POST", content);
+			Method = "POST";
+			Uri = url;
 		}
-		class SuccessHandler {
+
+		/*class SuccessHandler {
 			Action<string> getAppid;
 			Action<Exception> error;
 			
@@ -53,7 +48,7 @@ namespace Apperian.Ease.Publisher
 				else if (result.ContainsKey ("result"))
 					getAppid (result["result"]["appID"]);
 			}
-		}
+		}*/
 	}
 }
 

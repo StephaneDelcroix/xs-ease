@@ -12,21 +12,16 @@ using System.Collections.Generic;
 
 namespace Apperian.Ease.Publisher
 {
-	public class GetListRequest : JsonRequest
+	public class GetListRequest : JsonRequest<GetListResult>
 	{
-		public GetListRequest (Action<IList<EaseApplication>> success, Action<Exception> error) : base ((new SuccessHandler (success, error)).GetContent, error)
+		public GetListRequest (string url, string token, Action<GetListResult> success, Action<Exception> error) : base (success, error)
 		{
+			RequestContent = String.Format ("{{\"id\": 1, \"apiVersion\": \"1.0\", \"method\": \"com.apperian.eas.apps.getlist\", \"params\": {{\"token\": \"{0}\"}}, \"jsonrpc\": \"2.0\"}}", token);
+			Uri = url;
+			Method = "POST";
 		}
 
-		public void GetList (string url, string token)
-		{
-			var content = String.Format ("{{\"id\": 1, \"apiVersion\": \"1.0\", \"method\": \"com.apperian.eas.apps.getlist\", \"params\": {{\"token\": \"{0}\"}}, \"jsonrpc\": \"2.0\"}}", token);
-#if DEBUG
-			Console.WriteLine (content);
-#endif
-			Send (url, "POST", content);
-		}
-
+		/*
 		class SuccessHandler {
 			Action<IList<EaseApplication>> getAppList;
 			Action<Exception> error;
@@ -74,6 +69,7 @@ namespace Apperian.Ease.Publisher
 					getAppList (list);
 				}
 			}
-		}
+
+		}*/
 	}
 }

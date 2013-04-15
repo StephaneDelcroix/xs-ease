@@ -159,20 +159,20 @@ namespace Apperian.Ease.Publisher
 				return;
 			}
 
-			Action<string> onAuthenticatedAction = (t) => {
+			Action<AuthenticateResult> onAuthenticatedAction = (r) => {
 				monitor.Log.WriteLine ("done");
-				token = t; 
+				token = r.Result.Token; 
 				if (onAuthenticated != null) 
 					onAuthenticated (targetName);
 				SetState (State.Authenticated);
 			};
 
-			var request = new AuthenticateRequest (onAuthenticatedAction, 
+			var request = new AuthenticateRequest (url, email, password, onAuthenticatedAction, 
 				(e) => {
 				monitor.Log.WriteLine ("FAILED");
 				error = e; SetState (State.Error); }
 			);
-			request.Authenticate (url, email, password);
+			request.Send ();
 		}
 
 		void GetApplicationList ()
@@ -186,24 +186,32 @@ namespace Apperian.Ease.Publisher
 				return;
 			}
 
-			Action<IList<EaseApplication>> onGetListAction = (listedApps) => {
+			Action<GetListResult> onGetListAction = (result) => {
 				monitor.Log.WriteLine ("done");
+
 				var projType = (Project is IPhoneProject) ? "iOS App (IPA File)" : "Android App (APK File)";
-				var applicationToUpdate = listedApps.Where(a => a.Name == Project.GetApplicationName () && a.ApplicationType == projType).FirstOrDefault ();
-				if (applicationToUpdate != null) {
-					appId = applicationToUpdate.Id;
+				var app = result.Result.Applications.Where(a => a.Name == Project.GetApplicationName () && a.ApplicationType == projType).FirstOrDefault ();
+				if (app != null) {
+					appId = app.ID;
 					if (stopAfter == State.AppsListed)
-						Metadata = applicationToUpdate.Metadata;
+					Metadata = new EaseMetadata {
+						Author = app.Author,
+						LongDescription = app.LongDescription,
+						ShortDescription = app.ShortDescription,
+						Version = app.Version,
+						VersionNotes = app.VersionNotes,
+						Name = app.Name,
+					};
 				}
 				SetState (State.AppsListed);
 			};
 			
-			var request = new GetListRequest (onGetListAction, 
+			var request = new GetListRequest (url, token, onGetListAction, 
 			                                       (e) => {
 				monitor.Log.WriteLine ("FAILED");
 				error = e; SetState (State.Error); }
 			);
-			request.GetList (url, token);
+			request.Send ();
 		}
 
 		void Create ()
@@ -217,19 +225,19 @@ namespace Apperian.Ease.Publisher
 				return;
 			}
 			
-			Action<Transaction> onCreateAction = (t) => {
+			Action<CreateOrUpdateResult> onCreateAction = (t) => {
 				monitor.Log.WriteLine ("done");
-				transactionId = t.Id;
-				fileUploadUrl = t.FileUploadUrl;
+				transactionId = t.Result.TransactionID;
+				fileUploadUrl = t.Result.FileUploadURL;
 				SetState (State.Created);
 			};
 			
-			var request = new CreateRequest (onCreateAction, 
+			var request = new CreateRequest (url, token, onCreateAction, 
 			                                  (e) => {
 				monitor.Log.WriteLine ("FAILED");
 				error = e; SetState (State.Error); }
 			);
-			request.Create (url, token);
+			request.Send ();
 		}
 
 		void Update ()
@@ -247,21 +255,21 @@ namespace Apperian.Ease.Publisher
 				monitor.ReportError ("An app ID is required", null);
 				return;
 			}
-			Action<Transaction> onUpdateAction = (t) => {
+			Action<CreateOrUpdateResult> onUpdateAction = (t) => {
 				monitor.Log.WriteLine ("done");
-				transactionId = t.Id;
-				fileUploadUrl = t.FileUploadUrl;
+				transactionId = t.Result.TransactionID;
+				fileUploadUrl = t.Result.FileUploadURL;
 				SetState (State.Updated);
 			};
 			
-			var request = new UpdateRequest (onUpdateAction, 
+			var request = new UpdateRequest (url, appId, token, onUpdateAction, 
 			                                 (e) => {
 				monitor.Log.WriteLine ("FAILED");
 				error = e; 
 				SetState (State.Error); 
 			}
 			);
-			request.Update (url, appId, token);
+			request.Send ();
 		}
 
 		void Upload ()
@@ -321,19 +329,19 @@ namespace Apperian.Ease.Publisher
 				return;
 			}
 			
-			Action<string> onPublishAction = (t) => {
+			Action<PublishResult> onPublishAction = (t) => {
 				monitor.Log.WriteLine ("done");
-				appId = t;
+				appId = t.Result.AppId;
 				SetState (State.Done);
 			};
 			
-			var request = new PublishRequest (onPublishAction, 
+			var request = new PublishRequest (url, token, transactionId, fileId, Metadata, onPublishAction, 
 			                                 (e) => {
 				monitor.Log.WriteLine ("FAILED");
 				error = e; 
 				SetState (State.Error); 
 			});
-			request.Publish (url, token, transactionId, fileId, Metadata);
+			request.Send ();
 		}
 
 		void ReportError ()

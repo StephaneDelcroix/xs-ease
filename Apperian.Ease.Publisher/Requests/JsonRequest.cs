@@ -10,14 +10,20 @@ using System;
 using System.IO;
 using System.Net;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+
 namespace Apperian.Ease.Publisher
 {
-	public abstract class JsonRequest
+	public abstract class JsonRequest<T> where T : Result
 	{
-		protected readonly Action<string> Success;
+		protected readonly Action<T> Success;
 		protected readonly Action<Exception> Error;
+		protected string Uri { get; set;}
+		protected string Method { get;set;}
+		protected string RequestContent { get; set; }
 
-		public JsonRequest (Action<string> success, Action<Exception> error)
+		public JsonRequest (Action<T> success, Action<Exception> error)
 		{
 			this.Success = success;
 			this.Error = error;
@@ -33,12 +39,15 @@ namespace Apperian.Ease.Publisher
 			return request;
 		}
 
-		protected void Send (string url, string method, string content)
+		public void Send ()
 		{
+#if DEBUG
+			Console.WriteLine (RequestContent);
+#endif
 			try {
-				var request = Create (method, new Uri (url));
+				var request = Create (Method, new Uri (Uri));
 				using (var writer = new StreamWriter (request.GetRequestStream ())) {
-					writer.Write (content);
+					writer.Write (RequestContent);
 				}
 				request.BeginGetResponse (ReadCallback, request);
 			} catch (Exception e) {
@@ -52,7 +61,23 @@ namespace Apperian.Ease.Publisher
 				var request = (HttpWebRequest)asyncResult.AsyncState;
 				var response = (HttpWebResponse)request.EndGetResponse (asyncResult);
 				using (var reader = new StreamReader (response.GetResponseStream ())) {
-					Success (reader.ReadToEnd ());
+					HandleResponse (reader);
+				}
+			} catch (Exception e) {
+				Error (e);
+			}
+		}
+
+		protected virtual void HandleResponse (StreamReader streamReader)
+		{
+			try {
+				using (var jsonReader = new JsonTextReader (streamReader)) {
+					var serializer = new JsonSerializer ();
+					var @object = serializer.Deserialize<T> (jsonReader);
+					if (@object.Error == null)
+						Success(@object);
+					else
+						Error (new Exception (String.Format ("{0} - {1}", @object.Error.Message, @object.Error.Data == null ? null : @object.Error.Data.DetailedMessage)));
 				}
 			} catch (Exception e) {
 				Error (e);

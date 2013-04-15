@@ -7,7 +7,7 @@
        description	= "Provides upload of builds to Apperian EASE"
        category		= "Mobile Development"
        icon32		= "icons/ease.png"
-       version		= "0.0.8">
+       version		= "0.0.9">
 
 	<Runtime>
 		<Import file="icons/ease.png" />
@@ -18,6 +18,7 @@
 		<Addin id="::MonoDevelop.Core" version="4.0"/>
 		<Addin id="::MonoDevelop.IPhone" version="4.0"/>
 		<Addin id="::MonoDevelop.MonoAndroid" version="4.0"/>
+		<Addin id="::MonoDevelop.MacDev" version="4.0"/>
     </Dependencies>
     <Extension path = "/MonoDevelop/Ide/Commands/Edit">
 		<Command id = "Apperian.Ease.Publisher.Publish"

@@ -82,6 +82,9 @@
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\..\..\Applications\Xamarin Studio.app\Contents\MacOS\lib\monodevelop\AddIns\MonoDevelop.MacDev\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PublishHandler.cs" />
@@ -104,10 +107,16 @@
     <Compile Include="Requests\PublishRequest.cs" />
     <Compile Include="StringExtensions.cs" />
     <Compile Include="ProjectExtensions.cs" />
+    <Compile Include="Results\AuthenticateResult.cs" />
+    <Compile Include="Results\GetListResult.cs" />
+    <Compile Include="Results\CreateOrUpdateResult.cs" />
+    <Compile Include="Results\PublishResult.cs" />
+    <Compile Include="Results\Result.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Requests\" />
     <Folder Include="Model\" />
     <Folder Include="icons\" />
+    <Folder Include="Results\" />
   </ItemGroup>
 </Project>

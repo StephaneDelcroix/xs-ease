@@ -11,21 +11,15 @@ using System.Json;
 
 namespace Apperian.Ease.Publisher
 {
-	public class CreateRequest : JsonRequest
+	public class CreateRequest : JsonRequest<CreateOrUpdateResult>
 	{
-		public CreateRequest (Action<Transaction> success, Action<Exception> error) : base ((new SuccessHandler (success, error)).GetContent, error)
+		public CreateRequest (string url, string token, Action<CreateOrUpdateResult> success, Action<Exception> error) : base (success, error)
 		{
+			RequestContent = String.Format ("{{\"id\": 1, \"apiVersion\": \"1.0\", \"method\": \"com.apperian.eas.apps.create\", \"params\": {{\"token\": \"{0}\"}}, \"jsonrpc\": \"2.0\"}}", token);
+			Uri = url;
+			Method = "POST";
 		}
-
-		public void Create (string url, string token)
-		{
-			var content = String.Format ("{{\"id\": 1, \"apiVersion\": \"1.0\", \"method\": \"com.apperian.eas.apps.create\", \"params\": {{\"token\": \"{0}\"}}, \"jsonrpc\": \"2.0\"}}", token);
-#if DEBUG
-			Console.WriteLine (content);
-#endif
-			Send (url, "POST", content);
-		}
-
+		/*
 		class SuccessHandler {
 			Action<Transaction> getTransaction;
 			Action<Exception> error;
@@ -52,7 +46,7 @@ namespace Apperian.Ease.Publisher
 				else if (result.ContainsKey ("result"))
 					getTransaction (new Transaction {FileUploadUrl = result["result"]["fileUploadURL"], Id = result["result"]["transactionID"]});
 			}
-		}
+		}*/
 	}
 }
 
