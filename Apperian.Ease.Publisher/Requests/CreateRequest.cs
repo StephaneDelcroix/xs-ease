@@ -7,7 +7,6 @@
 // Copyright (c) 2013 Apperian, Inc.
 //
 using System;
-using System.Json;
 
 namespace Apperian.Ease.Publisher
 {

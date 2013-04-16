@@ -11,7 +11,6 @@ using System.IO;
 using System.Net;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace Apperian.Ease.Publisher
 {
@@ -39,7 +38,7 @@ namespace Apperian.Ease.Publisher
 			return request;
 		}
 
-		public void Send ()
+		public virtual void Send ()
 		{
 #if DEBUG
 			Console.WriteLine (RequestContent);
@@ -55,7 +54,7 @@ namespace Apperian.Ease.Publisher
 			}
 		}
 
-		void ReadCallback (IAsyncResult asyncResult) 
+		protected void ReadCallback (IAsyncResult asyncResult) 
 		{
 			try {
 				var request = (HttpWebRequest)asyncResult.AsyncState;

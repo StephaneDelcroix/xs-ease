@@ -1,4 +1,4 @@
-- replace System.Json by Json.NET (found in Monodevelop.IPhone): todo: Upload
 - documentation
 - serialise settings in json
 - fiugre out why the Monitor does monitor as expected
+- long description

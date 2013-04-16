@@ -6,7 +6,6 @@
 //
 // Copyright (c) 2013 Apperian, Inc.
 //
-using System;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 

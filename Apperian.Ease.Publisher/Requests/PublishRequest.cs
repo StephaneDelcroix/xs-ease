@@ -7,7 +7,6 @@
 // Copyright (c) 2013 Apperian, Inc.
 //
 using System;
-using System.Json;
 
 namespace Apperian.Ease.Publisher
 {
@@ -21,34 +20,5 @@ namespace Apperian.Ease.Publisher
 			Method = "POST";
 			Uri = url;
 		}
-
-		/*class SuccessHandler {
-			Action<string> getAppid;
-			Action<Exception> error;
-			
-			public SuccessHandler (Action<string> getAppid, Action<Exception> error)
-			{
-				this.getAppid = getAppid;
-				this.error = error;
-			}
-			
-			public void GetContent (string content)
-			{
-#if DEBUG
-				Console.WriteLine (content);
-#endif
-				JsonValue result = JsonValue.Parse (content);
-				if (result.ContainsKey ("error")) {
-					string errormessage = String.Format ("{0}", result["error"]["message"]);
-#if DEBUG 
-					Console.WriteLine (">>>ERROR>>>" + errormessage);
-#endif
-					error (new Exception (errormessage));
-				}
-				else if (result.ContainsKey ("result"))
-					getAppid (result["result"]["appID"]);
-			}
-		}*/
 	}
 }
-

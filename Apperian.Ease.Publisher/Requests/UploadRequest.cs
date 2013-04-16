@@ -8,56 +8,41 @@
 //
 using System;
 using System.IO;
-using System.Globalization;
-using System.Collections.Generic;
-using System.Web;
 using System.Text;
 using System.Net;
-using System.Json;
 
 namespace Apperian.Ease.Publisher
 {
-	public class UploadRequest
+	public class UploadRequest : JsonRequest<UploadResult>
 	{
-		Action<string> success;
-		Action<Exception> error;
+		string fileUploadUrl;
+		string transactionId;
+		string payload;
 
-		public UploadRequest (Action<string> success, Action<Exception> error)
+		public UploadRequest (string fileUploadUrl, string transactionId, string payload, Action<UploadResult> success, Action<Exception> error): base (success, error)
 		{
-			this.success = success;
-			this.error = error;
+			this.fileUploadUrl = fileUploadUrl;
+			this.transactionId = transactionId;
+			this.payload = payload;
+
 		}
 
-		public void Upload (string fileUploadUrl, string transactionId, string ipa)
+		public override void Send ()
 		{
 #if DEBUG
 			Console.WriteLine (fileUploadUrl);
-			Console.WriteLine (ipa);
+			Console.WriteLine (payload);
 #endif
 			try {
-				var content = UploadFileEx (ipa, fileUploadUrl, "LUuploadFile");
-#if DEBUG
-				Console.WriteLine (content);
-#endif
-				JsonValue result = JsonValue.Parse (content);
-				if (result.ContainsKey ("fileID")) {
-					success (result["fileID"]);
-				}
-				else {
-					string errormessage = String.Format ("{0} - {1}", result["error"]["message"], result["error"]["data"]["detailedMessage"]);
-#if DEBUG 
-					Console.WriteLine (">>>ERROR>>>" + errormessage);
-#endif
-					error (new Exception (errormessage));
-				}
+				UploadFileEx (payload, fileUploadUrl, "LUuploadFile");
 			} catch (Exception e)
 			{
-				error (e);
+				Error (e);
 			}
 		}
 
-		public static string UploadFileEx( string uploadfile, string url, 
-		                                  string fileFormName = null, string contenttype = null)
+		public void UploadFileEx (string uploadfile, string url, 
+		                          string fileFormName = null, string contenttype = null)
 		{
 			if (string.IsNullOrEmpty (fileFormName))
 				fileFormName = "file";
@@ -70,7 +55,6 @@ namespace Apperian.Ease.Publisher
 			string boundary = "----------" + DateTime.Now.Ticks.ToString("x");
 			HttpWebRequest webrequest = (HttpWebRequest)WebRequest.Create(uri);
 			webrequest.ContentType = "multipart/form-data; boundary=" + boundary;
-			//webrequest.ContentType = "multipart/form-data; boundary=" + boundary;
 			webrequest.Method = "POST";
 			
 			// Build up the post message header
@@ -79,7 +63,6 @@ namespace Apperian.Ease.Publisher
 			sb.Append(boundary);
 			sb.Append("\r\n");
 			sb.Append("Content-Disposition: form-data; name=\"");
-			//sb.Append("Content-Disposition: file; name=\"");
 			sb.Append(fileFormName);
 			sb.Append("\"; filename=\"");
 			sb.Append(Path.GetFileName(uploadfile));
@@ -119,12 +102,7 @@ namespace Apperian.Ease.Publisher
 			// Write out the trailing boundary
 			requestStream.Write(boundaryBytes, 0, boundaryBytes.Length);
 
-			WebResponse response = webrequest.GetResponse();
-			Stream s = response.GetResponseStream();
-			StreamReader sr = new StreamReader(s);
-			
-			return sr.ReadToEnd();
+			webrequest.BeginGetResponse (ReadCallback, webrequest);
 		}
 	}
 }
-

@@ -7,15 +7,12 @@
 // Copyright (c) 2013 Apperian, Inc.
 //
 using System;
-using System.IO;
 using System.Linq;
-using System.Collections.Generic;
 
 using MonoDevelop.Ide;
 using MonoDevelop.Core;
 using MonoDevelop.Core.ProgressMonitoring;
 using MonoDevelop.IPhone;
-using MonoDevelop.MonoDroid;
 using MonoDevelop.Projects;
 
 namespace Apperian.Ease.Publisher
@@ -288,19 +285,19 @@ namespace Apperian.Ease.Publisher
 				return;
 			}
 
-			Action<string> onUploadAction = (r) => {
+			Action<UploadResult> onUploadAction = (r) => {
 				monitor.Log.WriteLine ("done");
-				fileId = r;
+				fileId = r.FileId;
 				SetState (State.Uploaded);
 			};
 			
-			var request = new UploadRequest (onUploadAction, 
+			var request = new UploadRequest (fileUploadUrl, transactionId, Project.GetBuildArtifact(Configuration), onUploadAction, 
 			                                 (e) => {
 				monitor.Log.WriteLine ("FAILED");
 				error = e; 
 				SetState (State.Error); 
 			});
-			request.Upload (fileUploadUrl, transactionId, Project.GetBuildArtifact(Configuration));
+			request.Send ();
 		}
 
 		void Publish ()

@@ -61,9 +61,6 @@
     </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System" />
-    <Reference Include="System.Json">
-      <HintPath>..\..\..\..\..\Library\Frameworks\Mono.framework\Versions\Current\lib\mono\4.0\System.Json.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="MonoDevelop.IPhone">
       <HintPath>..\..\..\..\..\Applications\Xamarin Studio.app\Contents\MacOS\lib\monodevelop\AddIns\MonoDevelop.IPhone\MonoDevelop.IPhone.dll</HintPath>
@@ -112,6 +109,7 @@
     <Compile Include="Results\CreateOrUpdateResult.cs" />
     <Compile Include="Results\PublishResult.cs" />
     <Compile Include="Results\Result.cs" />
+    <Compile Include="Results\UploadResult.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Requests\" />
