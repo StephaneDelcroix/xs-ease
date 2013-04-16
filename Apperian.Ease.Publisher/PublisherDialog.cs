@@ -47,7 +47,7 @@ namespace Apperian.Ease.Publisher
 		public string TargetPassword { get { return targets[comboboxTargets.Active].Password; }}
 		public EaseMetadata Metadata { get { return new EaseMetadata {
 					Author = authorEntry.Text,
-					LongDescription = descriptionEntry.Text,
+					LongDescription = lonDescriptionEntry.Buffer.Text.TrimAt (1000),
 					Name = nameEntry.Text,
 					ShortDescription = descriptionEntry.Text,
 					Version = versionEntry.Text,
@@ -60,23 +60,11 @@ namespace Apperian.Ease.Publisher
 
 		void LoadTargets ()
 		{
-			/*
-			targets = new List<Tuple<string,string,string,string>> ();
-			var prefs = PublishHandler.GetActiveMobileProject ().UserProperties.GetValue<string> (settingsKey);
-			if (prefs == null)
-				return;
-			var splitted = prefs.Split (new [] {'|'});
-			if (splitted.Length % 4 == 0) {
-				for (var i=0;i<splitted.Length/4;i+=4)
-					targets.Add (new Tuple<string, string, string, string> (splitted[i], splitted[i+1], splitted[i+2], splitted[i+3]));
-			}
-			*/
 			try {
 				var prefs = PublishHandler.GetActiveMobileProject ().UserProperties.GetValue<string> (settingsKey);
 				var settings = JsonConvert.DeserializeObject<TargetsSettings> (prefs);
 				targets = settings.Targets ?? new List<Target> ();
-			} catch (Exception e) 
-			{
+			} catch (Exception e) {
 				Console.WriteLine ("Failed to load Apperian EASE settings. {0}", e);
 				targets = new List<Target> ();
 			}
@@ -84,15 +72,6 @@ namespace Apperian.Ease.Publisher
 
 		void SaveTargets ()
 		{
-			/*
-			var prefs = "";
-			foreach (var t in targets)
-				prefs += String.Format ("{0}|{1}|{2}|{3}|", t.Item1, t.Item2, t.Item3, t.Item4);
-			if (prefs.Length > 0)
-				prefs = prefs.Substring (0, prefs.Length-1);
-			
-			PublishHandler.GetActiveMobileProject ().UserProperties.SetValue<string> (settingsKey, prefs);
-*/
 			try {
 				var settings = new TargetsSettings {
 					Targets = targets,
@@ -101,8 +80,7 @@ namespace Apperian.Ease.Publisher
 				var prefs = JsonConvert.SerializeObject (settings);
 				Console.WriteLine (settings);
 				PublishHandler.GetActiveMobileProject ().UserProperties.SetValue<string> (settingsKey, prefs);
-			} catch (Exception e)
-			{
+			} catch (Exception e) {
 				Console.WriteLine ("failed to save Apperian EASE settings. {0}", e);
 			}
 		}
@@ -163,9 +141,9 @@ namespace Apperian.Ease.Publisher
 				
 			if (publisher.Metadata != null) {
 				descriptionEntry.Text = publisher.Metadata.ShortDescription;
+				lonDescriptionEntry.Buffer.Text = publisher.Metadata.LongDescription;
 				versionNotesEntry.Buffer.Text = publisher.Metadata.VersionNotes;
 			}
-		
 		}
 
 		public class TargetsSettings {
