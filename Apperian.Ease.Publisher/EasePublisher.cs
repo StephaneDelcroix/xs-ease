@@ -60,11 +60,11 @@ namespace Apperian.Ease.Publisher
 			this.Metadata = metadata;
 		}
 
-		public void Start (Action<string> authenticated, Action success, Action error)
+		public void Start (Action<string> authenticated, Action success, Action onerror)
 		{	
 			onAuthenticated = authenticated;
 			onSuccess = success;
-			onError = error;
+			onError = onerror;
 			try {
 				monitor = new AggregatedProgressMonitor ();
 				monitor.AddSlaveMonitor (IdeApp.Workbench.ProgressMonitors.GetOutputProgressMonitor (
@@ -82,8 +82,6 @@ namespace Apperian.Ease.Publisher
 					LoggingService.LogError ("Unhandled exception while publishing", ex);
 				} catch {
 				}
-			} finally {
-				monitor.Dispose ();
 			}
 		}
 
@@ -106,7 +104,6 @@ namespace Apperian.Ease.Publisher
 				GetApplicationList ();
 				break;
 			case State.AppsListed:
-				//var app = listedApplications.Where (ea => ea.Name == ApplicationName).FirstOrDefault ();
 				if (appId == null)
 					Create ();
 				else
@@ -120,19 +117,21 @@ namespace Apperian.Ease.Publisher
 				Publish ();
 				break;
 			case State.Done:
-				monitor.Log.WriteLine ("Operation completed successfully");
+				monitor.ReportSuccess ("Operation completed successfully");
 				if (onSuccess != null)
 					onSuccess ();
+				monitor.Dispose ();
 				break;
 			case State.Error:
 				ReportError ();
+				monitor.Dispose ();
 				break;
 			}
 		}
 
 		void Authenticate ()
 		{
-			monitor.Log.Write ("Authenticating...");
+			monitor.BeginTask ("Authenticating", 1);
 #if DEBUG
 			Console.WriteLine ("Authenticate.");
 #endif
@@ -157,24 +156,21 @@ namespace Apperian.Ease.Publisher
 			}
 
 			Action<AuthenticateResult> onAuthenticatedAction = (r) => {
-				monitor.Log.WriteLine ("done");
+				monitor.EndTask ();
 				token = r.Result.Token; 
 				if (onAuthenticated != null) 
 					onAuthenticated (targetName);
 				SetState (State.Authenticated);
 			};
 
-			var request = new AuthenticateRequest (url, email, password, onAuthenticatedAction, 
-				(e) => {
-				monitor.Log.WriteLine ("FAILED");
-				error = e; SetState (State.Error); }
-			);
+			var request = new AuthenticateRequest (url, email, password, 
+			                                       onAuthenticatedAction, OnErrorAction);
 			request.Send ();
 		}
 
 		void GetApplicationList ()
 		{
-			monitor.Log.Write ("Getting application list...");
+			monitor.BeginTask ("Getting application list", 1);
 #if DEBUG
 			Console.WriteLine ("GetApplication List.");
 #endif
@@ -184,7 +180,7 @@ namespace Apperian.Ease.Publisher
 			}
 
 			Action<GetListResult> onGetListAction = (result) => {
-				monitor.Log.WriteLine ("done");
+				monitor.EndTask ();
 
 				var projType = (Project is IPhoneProject) ? "iOS App (IPA File)" : "Android App (APK File)";
 				var app = result.Result.Applications.Where(a => a.Name == Project.GetApplicationName () && a.ApplicationType == projType).FirstOrDefault ();
@@ -203,17 +199,14 @@ namespace Apperian.Ease.Publisher
 				SetState (State.AppsListed);
 			};
 			
-			var request = new GetListRequest (url, token, onGetListAction, 
-			                                       (e) => {
-				monitor.Log.WriteLine ("FAILED");
-				error = e; SetState (State.Error); }
-			);
+			var request = new GetListRequest (url, token, 
+			                                  onGetListAction, OnErrorAction);
 			request.Send ();
 		}
 
 		void Create ()
 		{
-			monitor.Log.Write ("Creating application...");
+			monitor.BeginTask ("Creating application", 1);
 #if DEBUG
 			Console.WriteLine ("Create.");
 #endif
@@ -223,23 +216,20 @@ namespace Apperian.Ease.Publisher
 			}
 			
 			Action<CreateOrUpdateResult> onCreateAction = (t) => {
-				monitor.Log.WriteLine ("done");
+				monitor.EndTask ();
 				transactionId = t.Result.TransactionID;
 				fileUploadUrl = t.Result.FileUploadURL;
 				SetState (State.Created);
 			};
 			
-			var request = new CreateRequest (url, token, onCreateAction, 
-			                                  (e) => {
-				monitor.Log.WriteLine ("FAILED");
-				error = e; SetState (State.Error); }
-			);
+			var request = new CreateRequest (url, token, 
+			                                 onCreateAction, OnErrorAction);
 			request.Send ();
 		}
 
 		void Update ()
 		{
-			monitor.Log.Write ("Updating application...");
+			monitor.BeginTask ("Updating application", 1);
 #if DEBUG
 			Console.WriteLine ("Update.");
 #endif
@@ -252,26 +242,22 @@ namespace Apperian.Ease.Publisher
 				monitor.ReportError ("An app ID is required", null);
 				return;
 			}
+
 			Action<CreateOrUpdateResult> onUpdateAction = (t) => {
-				monitor.Log.WriteLine ("done");
+				monitor.EndTask ();
 				transactionId = t.Result.TransactionID;
 				fileUploadUrl = t.Result.FileUploadURL;
 				SetState (State.Updated);
 			};
 			
-			var request = new UpdateRequest (url, appId, token, onUpdateAction, 
-			                                 (e) => {
-				monitor.Log.WriteLine ("FAILED");
-				error = e; 
-				SetState (State.Error); 
-			}
-			);
+			var request = new UpdateRequest (url, appId, token, 
+			                                 onUpdateAction, OnErrorAction);
 			request.Send ();
 		}
 
 		void Upload ()
 		{
-			monitor.Log.Write ("Uploading application...");
+			monitor.BeginTask ("Uploading application", 1);
 #if DEBUG
 			Console.WriteLine ("Upload.");
 #endif
@@ -286,23 +272,19 @@ namespace Apperian.Ease.Publisher
 			}
 
 			Action<UploadResult> onUploadAction = (r) => {
-				monitor.Log.WriteLine ("done");
+				monitor.EndTask ();
 				fileId = r.FileId;
 				SetState (State.Uploaded);
 			};
 			
-			var request = new UploadRequest (fileUploadUrl, transactionId, Project.GetBuildArtifact(Configuration), onUploadAction, 
-			                                 (e) => {
-				monitor.Log.WriteLine ("FAILED");
-				error = e; 
-				SetState (State.Error); 
-			});
+			var request = new UploadRequest (fileUploadUrl, Project.GetBuildArtifact(Configuration), 
+			                                 onUploadAction, OnErrorAction);
 			request.Send ();
 		}
 
 		void Publish ()
 		{
-			monitor.Log.Write ("Publishing application...");
+			monitor.BeginTask ("Publish application", 1);
 #if DEBUG
 			Console.WriteLine ("Publish.");
 #endif
@@ -312,7 +294,7 @@ namespace Apperian.Ease.Publisher
 			}
 			
 			if (string.IsNullOrEmpty (transactionId)) {
-				monitor.ReportError ("A trnasaction ID is required", null);
+				monitor.ReportError ("A transaction ID is required", null);
 				return;
 			}
 			
@@ -327,18 +309,20 @@ namespace Apperian.Ease.Publisher
 			}
 			
 			Action<PublishResult> onPublishAction = (t) => {
-				monitor.Log.WriteLine ("done");
+				monitor.EndTask ();
 				appId = t.Result.AppId;
 				SetState (State.Done);
 			};
 			
-			var request = new PublishRequest (url, token, transactionId, fileId, Metadata, onPublishAction, 
-			                                 (e) => {
-				monitor.Log.WriteLine ("FAILED");
-				error = e; 
-				SetState (State.Error); 
-			});
+			var request = new PublishRequest (url, token, transactionId, fileId, Metadata,
+			                                  onPublishAction, OnErrorAction);
 			request.Send ();
+		}
+
+		void OnErrorAction (Exception e)
+		{
+			error = e;
+			SetState (State.Error);
 		}
 
 		void ReportError ()
@@ -352,4 +336,3 @@ namespace Apperian.Ease.Publisher
 		}
 	}
 }
-

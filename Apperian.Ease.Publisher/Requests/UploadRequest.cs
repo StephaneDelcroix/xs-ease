@@ -16,15 +16,12 @@ namespace Apperian.Ease.Publisher
 	public class UploadRequest : JsonRequest<UploadResult>
 	{
 		string fileUploadUrl;
-		string transactionId;
 		string payload;
 
-		public UploadRequest (string fileUploadUrl, string transactionId, string payload, Action<UploadResult> success, Action<Exception> error): base (success, error)
+		public UploadRequest (string fileUploadUrl, string payload, Action<UploadResult> success, Action<Exception> error): base (success, error)
 		{
 			this.fileUploadUrl = fileUploadUrl;
-			this.transactionId = transactionId;
 			this.payload = payload;
-
 		}
 
 		public override void Send ()
