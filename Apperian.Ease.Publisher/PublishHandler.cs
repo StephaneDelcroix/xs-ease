@@ -20,6 +20,8 @@ using MonoDevelop.MonoDroid;
 using MonoDevelop.Projects;
 using MonoDevelop.Components.Commands;
 
+using Xamarin.AndroidTools;
+
 namespace Apperian.Ease.Publisher
 {
 	public class PublishHandler : CommandHandler
@@ -69,6 +71,11 @@ namespace Apperian.Ease.Publisher
 						return;
 					androidproject.AddManifest();
 					IdeApp.ProjectOperations.Save (proj);
+				}
+
+				var manifest = AndroidAppManifest.Load (androidproject.AndroidManifest);
+				if (string.IsNullOrEmpty (manifest.ApplicationIcon)) {
+					MessageService.ShowMessage ("Your application doesn't have any icon set", "The publishing might fail due to this omission. Consider adding one.");
 				}
 			}
 

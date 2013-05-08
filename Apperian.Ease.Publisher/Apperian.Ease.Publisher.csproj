@@ -80,7 +80,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
     <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\..\..\..\Applications\Xamarin Studio.app\Contents\MacOS\lib\monodevelop\AddIns\MonoDevelop.MacDev\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\..\..\..\Applications\Xamarin Studio.app\Contents\MacOS\lib\monodevelop\AddIns\Xamarin.Ide\Newtonsoft.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
