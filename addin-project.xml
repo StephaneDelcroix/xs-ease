@@ -1,0 +1,7 @@
+<AddinProject appVersion="4.0">
+    <Project platforms="Mac">
+	<AddinFile>Apperian.Ease.Publisher/bin/Debug/Apperian.Ease.Publisher.dll</AddinFile>
+	<BuildFile>Apperian.Ease.Publisher/Apperian.Ease.Publisher.csproj</BuildFile>
+	<BuildConfiguration>Debug</BuildConfiguration>
+    </Project>
+</AddinProject>
