@@ -62,7 +62,7 @@ namespace Apperian.Ease.Publisher
 		void LoadTargets ()
 		{
 			try {
-				var prefs = PublishHandler.GetActiveMobileProject ().UserProperties.GetValue<string> (settingsKey);
+				var prefs = IdeApp.ProjectOperations.CurrentSelectedSolution.UserProperties.GetValue<string> (settingsKey);
 				var settings = JsonConvert.DeserializeObject<TargetsSettings> (prefs);
 				targets = settings.Targets ?? new List<Target> ();
 			} catch (Exception e) {
@@ -80,7 +80,7 @@ namespace Apperian.Ease.Publisher
 
 				var prefs = JsonConvert.SerializeObject (settings);
 				Console.WriteLine (settings);
-				PublishHandler.GetActiveMobileProject ().UserProperties.SetValue<string> (settingsKey, prefs);
+				IdeApp.ProjectOperations.CurrentSelectedSolution.UserProperties.SetValue<string> (settingsKey, prefs);
 			} catch (Exception e) {
 				Console.WriteLine ("failed to save Apperian EASE settings. {0}", e);
 			}
