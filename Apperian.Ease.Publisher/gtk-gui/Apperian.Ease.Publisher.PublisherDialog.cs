@@ -27,7 +27,7 @@ namespace Apperian.Ease.Publisher
 		private global::Gtk.Label versionEntry;
 		private global::Gtk.Button buttonCancel;
 		private global::Gtk.Button buttonPublish;
-		
+
 		protected virtual void Build ()
 		{
 			global::Stetic.Gui.Initialize (this);
@@ -88,6 +88,7 @@ namespace Apperian.Ease.Publisher
 			this.versionNotesEntry.HeightRequest = 150;
 			this.versionNotesEntry.CanFocus = true;
 			this.versionNotesEntry.Name = "versionNotesEntry";
+			this.versionNotesEntry.AcceptsTab = false;
 			this.GtkScrolledWindow.Add (this.versionNotesEntry);
 			this.table1.Add (this.GtkScrolledWindow);
 			global::Gtk.Table.TableChild w5 = ((global::Gtk.Table.TableChild)(this.table1 [this.GtkScrolledWindow]));
@@ -105,6 +106,7 @@ namespace Apperian.Ease.Publisher
 			this.lonDescriptionEntry = new global::Gtk.TextView ();
 			this.lonDescriptionEntry.CanFocus = true;
 			this.lonDescriptionEntry.Name = "lonDescriptionEntry";
+			this.lonDescriptionEntry.AcceptsTab = false;
 			this.GtkScrolledWindow1.Add (this.lonDescriptionEntry);
 			this.table1.Add (this.GtkScrolledWindow1);
 			global::Gtk.Table.TableChild w7 = ((global::Gtk.Table.TableChild)(this.table1 [this.GtkScrolledWindow1]));
