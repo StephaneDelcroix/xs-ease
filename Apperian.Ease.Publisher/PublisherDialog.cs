@@ -30,7 +30,8 @@ namespace Apperian.Ease.Publisher
 			LoadTargets ();
 			FillCombo ();
 
-			nameEntry.Sensitive = authorEntry.Sensitive = versionEntry.Sensitive = descriptionEntry.Sensitive = versionNotesEntry.Sensitive = false;
+			nameEntry.Sensitive = authorEntry.Sensitive = versionEntry.Sensitive = descriptionEntry.Sensitive = 
+				lonDescriptionEntry.Sensitive = versionNotesEntry.Sensitive = false;
 
 			nameEntry.Text = PublishHandler.GetActiveMobileProject ().GetApplicationName ();
 			authorEntry.Text = PublishHandler.GetActiveMobileProject ().AuthorInformation.Name;
@@ -122,7 +123,8 @@ namespace Apperian.Ease.Publisher
 		void OnTargetChanged (object sender, EventArgs e)
 		{
 			buttonPublish.Sensitive = false;
-			nameEntry.Sensitive = authorEntry.Sensitive = versionEntry.Sensitive = descriptionEntry.Sensitive = versionNotesEntry.Sensitive = false;
+			nameEntry.Sensitive = authorEntry.Sensitive = versionEntry.Sensitive = lonDescriptionEntry.Sensitive = 
+				descriptionEntry.Sensitive = versionNotesEntry.Sensitive = false;
 			var proj = PublishHandler.GetActiveMobileProject();
 			var conf = proj.GetConfiguration(IdeApp.Workspace.ActiveConfiguration) as DotNetProjectConfiguration;
 			publisher = new EasePublisher (proj, conf,  TargetUrl, TargetName, TargetEmail, TargetPassword, null);
@@ -137,7 +139,8 @@ namespace Apperian.Ease.Publisher
 		void OnSuccess ()
 		{
 			buttonPublish.Sensitive = true;
-			nameEntry.Sensitive = authorEntry.Sensitive = versionEntry.Sensitive = descriptionEntry.Sensitive = versionNotesEntry.Sensitive = true;
+			nameEntry.Sensitive = authorEntry.Sensitive = versionEntry.Sensitive = lonDescriptionEntry.Sensitive = 
+				descriptionEntry.Sensitive = versionNotesEntry.Sensitive = true;
 				
 			if (publisher.Metadata != null) {
 				descriptionEntry.Text = publisher.Metadata.ShortDescription;
