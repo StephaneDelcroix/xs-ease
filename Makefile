@@ -1,6 +1,6 @@
 CONFIGURATION=Release
 
-all: mrep
+all: mrep doc
 
 debug: CONFIGURATION = Debug
 debug: all
@@ -20,3 +20,6 @@ clean:
 
 clean-all: clean
 	rm -rf repo/
+
+doc:
+	cd docs && make
