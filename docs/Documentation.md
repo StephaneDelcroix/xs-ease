@@ -2,7 +2,7 @@
 
 This guide describes how to use the Apperian Publisher addin to publish mobile apps to Apperian EASE directly from Xamarin Studio.
 
-This addin is supported by Xamarin Studio version 4.0.0 or higher.
+This addin is supported by Xamarin Studio version 4.0.5 or higher.
 
 ## About the Apperian publisher addin ##
 Xamarin Studio is an IDE that allows you create mobile applications in C# for iOS (with Xamarin.iOS) or Android (with Xamarin.Android). The Apperian Publisher addin allows you to publish your mobile applications to Apperian EASE directly from Xamarin Studio.
