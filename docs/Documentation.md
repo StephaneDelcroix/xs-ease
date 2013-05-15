@@ -14,9 +14,15 @@ To use the Apperian Publisher addin, you first have to install it into Xamarin S
 
 First, open the addin manager
 
-![Addin-in manager menu entry](images/addinmanager0.png)
+![Addin manager menu entry](images/addinmanager0.png)
 
-TO BE COMPLETED
+In the *Gallery* tab, choose *Apperian EASE Publisher* from the *Mobile Development* section, and *Install* it.
+
+![Addin manager gallery](images/addinmanager1.png)
+
+That's it.
+
+**Note for Xamarin Studio Alpha (4.1.x) users**: the addin won't be listed in the gallery. You can get the addin file (.mpack) [directly from this page](http://addins.monodevelop.com/Project/Index/78) and install it with *Install from file...*
 
 ## Publish a Build ##
 Now that the addin is installed, you can use it to publish your mobile application.
@@ -44,6 +50,20 @@ Now that the addin is installed, you can use it to publish your mobile applicati
 
     If you don't have any, you can click on *Register Publish Target...*
 
+    * #### Register Publish Target ####
+
+        ![register publish target](images/register.png)
+	
+        Pick whatever you want for *Target Name*, it's a memo if you're publishing your application to multiple EASE backends/accounts. *Email* and *Password* are your EASE credentials. 
+	
+        *Note: Credentials are stored in your solution* .userprefs *file. Avoid putting that file in source control.*
+
+    Once you've selected the publish target, the addin will connect to the EASE backend and get the descriptions and release notes of the previous upload, if any. *Description*, *Long description* and *Release Notes* are all mandatory fields, so fill them.
+
+    *Note: Name, Author and Version fields are gathered from your mobile project configuration. Change them from there.*
+
+4. ### Publish ###
+    When you're done, hit *Publish*. If everything goes well, your application is now visible in the EASE web Portal.
 
 
 
