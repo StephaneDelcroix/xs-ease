@@ -26,7 +26,7 @@ namespace Apperian.Ease.Publisher
 {
 	public class PublishHandler : CommandHandler
 	{
-		protected override void Run ()
+		protected override async 	void Run ()
 		{
 #if DEBUG
 			Console.WriteLine ("Run");
@@ -85,7 +85,7 @@ namespace Apperian.Ease.Publisher
 
 				OperationHandler onbuild = 
 				(IAsyncOperation op) => {
-					if (!op.Success) {
+					if (op!=null && !op.Success) {
 						MessageService.ShowError (
 							"Cannot publish to Apperian EASE",
 							"Project did not build successfully");
@@ -99,8 +99,17 @@ namespace Apperian.Ease.Publisher
 					};
 					t.Start (); 
 				};
-				if (androidproject != null)
-					androidproject.PackageForAndroid (IdeApp.Workspace.ActiveConfiguration).Completed += onbuild;
+				if (androidproject != null) {
+					try {
+						await androidproject.ArchiveAsync (IdeApp.Workbench.ProgressMonitors.GetStatusProgressMonitor ("Archiving", null, true), IdeApp.Workspace.ActiveConfiguration);
+						onbuild (null);
+					} catch (Exception e) {
+						MessageService.ShowError (
+							"Failed to create Archive",
+							e.Message);
+					}
+				}
+//					androidproject.PackageForAndroid (IdeApp.Workspace.ActiveConfiguration).Completed += onbuild;
 				else
 					IdeApp.ProjectOperations.Build (IdeApp.ProjectOperations.CurrentSelectedProject).Completed += onbuild;
 			}
