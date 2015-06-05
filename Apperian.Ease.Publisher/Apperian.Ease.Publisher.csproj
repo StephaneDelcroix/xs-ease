@@ -110,6 +110,7 @@
     <Compile Include="Results\PublishResult.cs" />
     <Compile Include="Results\Result.cs" />
     <Compile Include="Results\UploadResult.cs" />
+    <Compile Include="PObject.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Requests\" />

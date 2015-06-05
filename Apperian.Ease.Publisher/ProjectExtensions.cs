@@ -50,13 +50,12 @@ namespace Apperian.Ease.Publisher
 		
 		static string GetIpaFilename (IPhoneProject proj, IPhoneProjectConfiguration conf)
 		{
-			//MonoDevelop.MacDev.PlistEditor.PDictionary a;
-			//var plist = proj.GetInfoPlistDocument ();
+
+			var plist = Xamarin.MacDev.PDictionary.FromFile (proj.GetInfoPlistFile ().FilePath);
 			var name = conf.IpaPackageName;
 			if (string.IsNullOrEmpty (name)) {
 				name = conf.CompiledOutputName.FileNameWithoutExtension;
-				string version = null;
-				//var version = plist != null ? plist.GetCFBundleVersion () : null;
+				var version = plist != null ? (plist["CFBundleVersion"] as Xamarin.MacDev.PString).Value : null;
 				if (!string.IsNullOrEmpty (version))
 					name += "-" + version;
 			}
